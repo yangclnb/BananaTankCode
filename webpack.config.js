@@ -1,33 +1,56 @@
 const path = require("path"); //用于获取路径相关的信息
 const HtmlWebpackPlugin = require("html-webpack-plugin"); //webpack中的插件，用于打包文件时可以在html中插入 script 和 link 标签
+const TerserPlugin = require("terser-webpack-plugin");
+
 module.exports = {
-  mode: "production", //编译的模式 [development,production]
+  mode: "production",
+  devtool: "inline-source-map",
   entry: {
-    //入口js文件
     entry: path.join(__dirname, "/src/main.js"),
   },
   output: {
-    //输出路径
     path: path.join(__dirname, "dist"),
-    filename: "bundle.js",
+    filename: "main.js",
+    // filename: "[name].[contenthash].js", 随机hash名称
   },
-
+  optimization: {
+    minimize: true,
+    minimizer: [new TerserPlugin()],
+  },
   module: {
     rules: [
-      //打包的规则，不同的文件类型可以参考官网的 https://webpack.docschina.org/loaders/
       {
-        test: /\.css$/i, //打包css文件 要打包css之类的文件在执行打包命令之前必须在入口js文件中引入，如( import "./banana.css" )
-        use: ["style-loader", "css-loader"], //所用到的loader
+        test: /\.css$/i,
+        use: ["style-loader", "css-loader"],
+      },
+      {
+        test: /\.(png|svg|jpg|jpeg|gif)$/i,
+        type: "asset/resource",
       },
       {
         test: /\.less$/i,
         use: ["style-loader", "css-loader", "less-loader"],
       },
+      {
+        test: /\.js$/i,
+        exclude: /node_modules/,
+        use: {
+          loader: "babel-loader",
+          options: {
+            presets: ["@babel/preset-env"],
+          },
+        },
+      },
     ],
   },
   devServer: {
-    //webpack-dev-server开启的服务器配置
     static: path.resolve(__dirname, "dist"), //服务器根路径
     port: "8080", //端口号
   },
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: "./index.html",
+      favicon: path.join(__dirname, "/src/img/favicon.ico"),
+    }),
+  ],
 };

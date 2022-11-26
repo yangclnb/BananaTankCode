@@ -1,10 +1,11 @@
 import "./less/index.less";
 import { Canvas } from "./js/canvas";
 import { Tank } from "./js/tank";
+import resource_img from "./img/tank.png"
 
 window.tank_img = new Image();
-tank_img.src = "./img/tank.png";
-tank_img.onload = () => {
+tank_img.src = resource_img;
+window.onload = () => {
   let canvasElement = document.querySelector("#main_canvas");
   window.game_canvas = new Canvas(canvasElement);
   const tank = new Tank(0, 0, 0, 0, "red", 0, false);
