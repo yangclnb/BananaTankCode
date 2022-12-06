@@ -8,6 +8,10 @@ module.exports = {
   entry: {
     entry: path.join(__dirname, "/src/main.js"),
   },
+  performance: {
+    // 性能设置,文件打包过大时，不报错和警告，只做提示
+    hints: false
+  },
   output: {
     path: path.join(__dirname, "dist"),
     filename: "main.js",

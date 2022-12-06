@@ -1,28 +1,27 @@
-const map_color_scheme = { a: ["#707eaf", "#307eaf"] };
-const map_faction_position = {
-  brick: { x: 106, y: 155 },
-  metal: { x: 156, y: 155 },
-  rock: { x: 210, y: 155 },
-};
+import { map_faction_position, map_color_scheme } from "./EnumObject";
 
 export class Canvas {
   constructor(canvasElement) {
-    console.log("canvasElement :>> ", canvasElement);
     this.canvas = canvasElement;
     const ctx = canvasElement.getContext("2d");
 
     this.ctx = ctx;
     this.width = this.canvas.width;
     this.height = this.canvas.height;
-    this.square_width = this.canvas.width / 15;
-    this.square_height = this.canvas.height / 10;
+    this.minimum_x = 20;
+    this.minimum_y = 12;
+    this.square_width = this.canvas.width / this.minimum_x;
+    this.square_height = this.canvas.height / this.minimum_y;
 
     this.init();
   }
 
   init(tank_list) {
-    this.create_vertical_background("#707eaf", "#307eaf");
-    // this.fill_texture_background("brick");
+    this.create_vertical_background(
+      map_color_scheme.c[0],
+      map_color_scheme.c[1]
+    );
+    // this.fill_texture_background("rock_map");
   }
 
   /**
@@ -34,14 +33,14 @@ export class Canvas {
    * @author: Banana
    */
   create_horizontal_background(color_1, color_2) {
-    for (let x = 0; x < 15; x++) {
-      for (let y = 0; y < 10; y++) {
+    for (let x = 0; x < this.minimum_x; x++) {
+      for (let y = 0; y < this.minimum_xy; y++) {
         this.ctx.fillStyle = x % 2 == 0 ? color_1 : color_2;
         this.ctx.fillRect(
           x * this.square_width,
           y * this.square_height,
-          this.canvas.width,
-          this.canvas.height
+          this.square_width,
+          this.square_height
         );
       }
     }
@@ -56,26 +55,30 @@ export class Canvas {
    * @author: Banana
    */
   create_vertical_background(color_1, color_2) {
-    for (let x = 0; x < 15; x++) {
-      for (let y = 0; y < 10; y++) {
+    for (let x = 0; x < this.minimum_x; x++) {
+      for (let y = 0; y < this.minimum_y; y++) {
         this.ctx.fillStyle = y % 2 == 0 ? color_1 : color_2;
         this.ctx.fillRect(
           x * this.square_width,
           y * this.square_height,
-          this.canvas.width,
-          this.canvas.height
+          this.square_width + 1,
+          this.square_height
         );
       }
     }
   }
 
+  /**
+   * @function: fill_texture_background
+   * @description: 以贴图形式填充背景
+   * @param {*} material
+   * @return {*}
+   * @author: Banana
+   */
   fill_texture_background(material) {
-    // const ptrn = this.ctx.createPattern(window.tank_img, "repeat");
-    // this.ctx.fillStyle = ptrn;
-    // this.ctx.fillRect(0, 0, this.width, this.height);
-
-    for (let x = 0; x < 15; x++) {
-      for (let y = 0; y < 10; y++) {
+    this.ctx.clearRect(0, 0, this.width, this.height);
+    for (let x = 0; x < this.minimum_x; x++) {
+      for (let y = 0; y < this.minimum_y; y++) {
         this.ctx.drawImage(
           window.tank_img,
           map_faction_position[material].x,
@@ -84,10 +87,40 @@ export class Canvas {
           46,
           x * this.square_width,
           y * this.square_height,
-          this.square_width + 6,
-          this.square_height + 4
+          this.square_width + 8,
+          this.square_height + 10
         );
       }
     }
+  }
+
+  /**
+   * @function: translate_stack
+   * @description: canvas中的所有translate操作都会影响接下来的图像绘制，用于在translate后还原操作达到不影响后续绘制的目的
+   * @return {*}
+   * @author: Banana
+   */
+  translate_stack() {
+    let operation_stack = [];
+
+    return (operation, argu_list, func) => {
+      if (operation_stack.length && operation === "pop") {
+        let current_operation = operation_stack.pop();
+        // 反转输入
+        current_operation.argu_list.forEach((element, i) => {
+          current_operation.argu_list[i] = -element;
+        });
+        return current_operation.func(...current_operation.argu_list);
+      } else if (operation === "push") {
+        operation_stack.push({ func, argu_list });
+        return func(...argu_list);
+      }
+    };
+  }
+
+  vision_origin() {
+    this.ctx.moveTo(0, 0);
+    this.ctx.lineTo(0, 30);
+    this.ctx.stroke();
   }
 }
