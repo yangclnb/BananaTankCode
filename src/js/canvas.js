@@ -118,6 +118,11 @@ export class Canvas {
     };
   }
 
+  /**
+   * @function: vision_origin
+   * @description: canvas 调整过程中容易找不到当前的原点位置，用于确定当前的原点位置
+   * @author: Banana
+   */
   vision_origin() {
     this.ctx.moveTo(0, 0);
     this.ctx.lineTo(0, 30);

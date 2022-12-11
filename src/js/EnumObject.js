@@ -3,10 +3,10 @@
  * @author: Banana
  */
 export const map_faction_position = {
-  red_tank: { x: 4, y: 4 },
-  blue_tank: { x: 4, y: 56 },
-  green_tank: { x: 4, y: 108 },
-  yellow_tank: { x: 4, y: 160 },
+  red: { x: 4, y: 4 },
+  blue: { x: 4, y: 56 },
+  green: { x: 4, y: 108 },
+  yellow: { x: 4, y: 160 },
   cannon: { x: 19, y: 212 },
   metal_map: { x: 107, y: 160 },
   brick_map: { x: 159, y: 160 },
@@ -48,3 +48,4 @@ export const tank_action = {
   },
   adjust_tank_direction: 2,
 };
+
