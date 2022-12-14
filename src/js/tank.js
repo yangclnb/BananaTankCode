@@ -45,12 +45,17 @@ export class Tank {
     };
 
     this.cannon = {
-      angle: angle(cannon_angle),
+      x: 0,
+      y: 0,
+      distance: 0, // 初始化炮弹移动的距离
+      cannonball_angle: 0, // 炮弹发射时的斜率
+      angle: angle(cannon_angle), //炮管的指向角度
       rotate_state: true, // 是否允许炮口旋转
-      launch_speed: 3, // 最大炮弹速
+      launch_speed: 15, // 最大炮弹速
       rotate_speed: angle(0.5), // 一帧旋转炮塔1°
       turn_direction: tank_turn.left, // 下次炮管的转向
-      launch_time: 0,
+      launch_time: 0, // 上次发射时间
+      thread: null, // 炮弹移动线程
     };
 
     this.radar = {
@@ -72,6 +77,7 @@ export class Tank {
    * @author: Banana
    */
   draw() {
+    //TODO 拆分成部分组件
     const canvas = window.game_canvas.canvas;
     const translate_stack = window.game_canvas.translate_stack();
     const ctx = window.game_canvas.ctx;
@@ -137,11 +143,34 @@ export class Tank {
     });
     ctx.lineTo(this.radar.largest_distance, 0);
     ctx.fill();
-    translate_stack("pop");
-
     ctx.closePath();
+
+    translate_stack("pop");
     translate_stack("pop");
 
+    // 炮弹 ---------------------
+    translate_stack("push", [angle(90)], (a) => {
+      ctx.rotate(a);
+    });
+    translate_stack("push", [this.cannon.x, this.cannon.y], (a, b) => {
+      ctx.translate(a, b);
+    });
+    translate_stack("push", [-this.cannon.cannonball_angle], (a) => {
+      ctx.rotate(a);
+    });
+
+    if (this.cannon.thread !== null) {
+      ctx.beginPath();
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = "rgba(254, 67, 101, 1)";
+      ctx.moveTo(0, 0);
+      ctx.lineTo(40, 0);
+      ctx.stroke();
+      ctx.closePath();
+    }
+    translate_stack("pop");
+    translate_stack("pop");
+    translate_stack("pop");
     //炮管 ---------------------------
 
     translate_stack("push", [-this.cannon.angle], (a) => {
@@ -175,9 +204,11 @@ export class Tank {
     // 当前坦克行为不是移动，直接退出
     if (this.tank.action !== tank_action.tank_move) return;
 
-    const k = Math.tan(this.tank.angle);
-
-    let [x_move, y_move] = this.compute_quadrant(k);
+    let [x_move, y_move] = this.compute_quadrant(
+      this.tank.speed,
+      this.tank.angle,
+      this.tank.move_direction
+    );
 
     //TODO 拆分边界检测 为 函数
     const square_width = window.game_canvas.square_width;
@@ -279,43 +310,49 @@ export class Tank {
 
   /**
    * @function: compute_quadrant
-   * @description: tank初始位置作为原点，计算tank下一步移动的x和y值得改变
-   * @param {*} k 斜率
+   * @description: tank初始位置作为原点，计算该 斜率和角度的 下一步移动的x和y值得改变
+   * @param {*} speed 移动的速度
+   * @param {*} angle 移动的角度
+   * @param {*} direction 移动的方向 [front|back]
    * @return {Array} [x,y]
    * @author: Banana
    */
-  compute_quadrant(k) {
-    let x = this.tank.speed / k;
-    let y = this.tank.speed * k;
+  compute_quadrant(speed, currentAngle, direction) {
+    const k = Math.tan(currentAngle);
+
+    let x = speed / k;
+    let y = speed * k;
+
+    // alert(`${k} | ${x} | ${y} | ${radian(currentAngle)}`);
 
     // 在tan 0时 可以把函数看作是y=0。则x趋近于∞，直接返回x轴的速率即可
-    if (x == Infinity) [x, y] = [this.tank.speed, 0];
+    if (x == Infinity) [x, y] = [speed, 0];
     else {
       // 将移动速度限制在规定的速率之内
-      while (Math.abs(x) >= this.tank.speed || Math.abs(y) >= this.tank.speed) {
+      while (Math.abs(x) >= speed || Math.abs(y) >= speed) {
         x = x / 2;
         y = y / 2;
       }
 
-      if (this.tank.angle <= angle(90)) {
+      if (currentAngle <= angle(90)) {
         y *= -1;
-      } else if (this.tank.angle <= angle(180)) {
+      } else if (currentAngle <= angle(180)) {
         // x *= -1;
         // y *= -1;
-      } else if (this.tank.angle <= angle(270)) {
+      } else if (currentAngle <= angle(270)) {
         x *= -1;
-      } else if (this.tank.angle <= angle(360)) {
+      } else if (currentAngle <= angle(360)) {
         x *= -1;
         y *= -1;
       }
     }
 
+    // alert(`${x} | ${y}`);
+
     // console.log("this.tank.turn_direction :>> ", this.tank.move_direction);
-    if (this.tank.move_direction === tank_action.tank_move_direction.front) {
+    if (direction === tank_action.tank_move_direction.front) {
       return [x, y];
-    } else if (
-      this.tank.move_direction === tank_action.tank_move_direction.back
-    ) {
+    } else if (direction === tank_action.tank_move_direction.back) {
       return [-x, -y];
     }
   }
@@ -341,9 +378,12 @@ export class Tank {
     // }, second);
 
     // 受到撞击倒退0.05s -> 旋转方向 -> 再次向前
-    const k = Math.tan(this.tank.angle);
     this.tank.move_direction = tank_action.tank_move_direction.back;
-    let [x_move, y_move] = this.compute_quadrant(k);
+    let [x_move, y_move] = this.compute_quadrant(
+      this.tank.speed,
+      this.tank.angle,
+      this.tank.move_direction
+    );
     console.log("x_move,y_move :>> ", x_move, y_move);
     this.tank.x += x_move;
     this.tank.y += y_move;
@@ -363,6 +403,7 @@ export class Tank {
    * @author: Banana
    */
   collision_detection(direction) {
+    //! 命名与实际含义不符合
     // if (direction === "x") {
     //   // x碰撞左转
     //   this.tank.turn_direction = tank_turn.left;
@@ -374,6 +415,42 @@ export class Tank {
   }
 
   /**
+   * @function: get_tank_collision_volume
+   * @description: 获取坦克碰撞体积, 获取目标坦克位置垂直函数，计算该函数的两个端点(需 format_position 后)
+   * @param {*} x 目标坦克的x位置
+   * @param {*} y 目标坦克的y位置
+   * @param {*} collision_value 冲突值
+   * @author: Banana
+   */
+  get_tank_collision_volume(x, y, collision_value) {
+    // 计算两点之间的斜率
+    const current_k = y / x;
+
+    // 向原点移动一段距离
+
+    x =
+      x > 0
+        ? x - window.game_canvas.average_length_width
+        : x + window.game_canvas.average_length_width;
+    y = current_k * x;
+
+    // 计算过该点而且垂直于当前斜率的函数的斜率 点(a,ak)  f(x)=-x/k + a(k+1/k)
+    const left_y =
+      x * (current_k + 1 / current_k) -
+      (x - window.game_canvas.average_length_width) / current_k;
+    const left_x = x * (Math.pow(current_k, 2) + 1) - current_k * left_y;
+
+    const right_y =
+      x * (current_k + 1 / current_k) -
+      (x + window.game_canvas.average_length_width) / current_k;
+    const right_x = x * (Math.pow(current_k, 2) + 1) - current_k * right_y;
+    // alert(
+    //   `x ${x}, y ${y}, left_x ${left_x}, left_y ${left_y}, right_x ${right_x}, right_y ${right_y}`
+    // );
+    return [left_x, left_y, right_x, right_y];
+  }
+
+  /**
    * @function: search_enemy
    * @description: 雷达开始搜索敌人
    * @param {*} radian
@@ -381,21 +458,21 @@ export class Tank {
    * @author: Banana
    */
   search_enemy(radian) {
-    //! 仍有特定角度无法触发，可以进一步加大判断k的精度
-    window.tank_position.forEach((value, key) => {
+    for (let [key, value] of window.tank_position) {
       // 排除自己的位置
-      if (key === this.tank.color) return;
+      if (key === this.tank.color) continue;
 
       //TODO 敌友判断
 
-      //* 将自身位置设置为原点，其他的坦克转化成基于自身为原点的位置，O(xo,yo) ,a(xa,ya) new_xa = xa-xo,new_ya=yo-ya
-      const x = value[0] - this.tank.x,
-        y = this.tank.y - value[1];
-      // console.log("x,y :>> ", x, y);
-
+      const [x, y] = this.format_position(
+        value[0],
+        value[1],
+        this.tank.x,
+        this.tank.y
+      );
       // 超越雷达范围直接退出
       const distance = Math.sqrt(x * x + y * y);
-      if (distance > this.radar.largest_distance) return;
+      if (distance > this.radar.largest_distance) continue;
 
       const k = Math.tan(radian).toFixed(2);
       const current_k = (y / x).toFixed(2); // 根据敌方坦克坐标和自身的坐标计算斜率
@@ -418,12 +495,87 @@ export class Tank {
         parseFloat(k) + 0.29 >= current_k &&
         parseFloat(k) - 0.29 <= current_k
       ) {
-        // alert(k + " " + current_k + "" + this.radar.angle);
-
+        this.launch_cannon();
         console.log(`${this.tank.color} : find you! => ${key}`);
         // return radian(this.radar.angle);
       }
-    });
+    }
+  }
+
+  /**
+   * @function: format_position
+   * @description: 格式化目标位置的坐标，将自身位置设置为原点，其他的坦克转化成基于自身为原点的位置，O(xo,yo) ,a(xa,ya) new_xa = xa-xo,new_ya=yo-ya
+   * @param {*} x 目标坦克的x位置
+   * @param {*} y 目标坦克的y位置
+   * @param {*} origin_x 作为原点x位置
+   * @param {*} origin_y 作为原点y位置
+   * @return {*} [x,y] 格式化后的坐标
+   * @author: Banana
+   */
+  format_position(x, y, origin_x, origin_y) {
+    return [x - origin_x, origin_y - y];
+  }
+
+  /**
+   * @function: launch_cannon
+   * @description: 发射炮弹
+   * @return {*}
+   * @author: Banana
+   */
+  launch_cannon() {
+    // console.log('object :>> ', Date.now() - this.cannon.launch_time);
+
+    if (Date.now() - this.cannon.launch_time >= 2000) {
+      clearInterval(this.cannon.thread);
+      this.cannon.launch_time = Date.now();
+      this.cannon.cannonball_angle = this.cannon.angle;
+      this.cannon.distance = 0;
+      this.cannon.x = 0;
+      this.cannon.y = 0;
+      this.cannon.thread = setInterval(() => {
+        return this.cannon_move();
+      }, 25);
+    } // 两秒 炮弹冷却时间
+  }
+
+  /**
+   * @function: cannon_move
+   * @description: 炮弹移动
+   * @return {*}
+   * @author: Banana
+   */
+  cannon_move() {
+    // console.log("object :>> ", this.cannon.x, this.cannon.y);
+    let [x_move, y_move] = this.compute_quadrant(
+      this.cannon.launch_speed,
+      this.cannon.cannonball_angle,
+      tank_action.tank_move_direction.front
+    );
+    this.cannon.x += x_move;
+    this.cannon.y += y_move;
+    // console.log("x_move,y_move :>> ", x_move, y_move);
+
+    //TODO 碰撞检测
+
+    for (let [key, value] of window.tank_position) {
+      // 排除自己的位置
+      if (key === this.tank.color) continue;
+
+      let [x, y] = this.format_position(
+        value[0],
+        value[1],
+        this.cannon.x + this.tank.x,
+        this.cannon.y + this.tank.y
+      );
+
+      console.log("this.tank.color,x,y :>> ", this.tank.color, x, y);
+
+      const [left_x, left_y, right_x, right_y] = this.get_tank_collision_volume(
+        x,
+        y
+      );
+      // alert(left_x, left_y, right_x, right_y);
+    }
   }
 
   /**

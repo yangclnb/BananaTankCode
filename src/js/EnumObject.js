@@ -18,7 +18,7 @@ export const map_faction_position = {
  * @author: Banana
  */
 export const map_color_scheme = {
-  a: ["#707eaf", "#307eaf"],
+  a: ["#83af9b", "#f9cdad"],
   b: ["#FC354C", "#0ABFBC"],
   c: ["#a73737", "#7a2828"],
 };

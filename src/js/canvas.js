@@ -12,14 +12,15 @@ export class Canvas {
     this.minimum_y = 12;
     this.square_width = this.canvas.width / this.minimum_x;
     this.square_height = this.canvas.height / this.minimum_y;
+    this.average_length_width = (this.square_width + this.square_height) / 2;
 
     this.init();
   }
 
   init(tank_list) {
     this.create_vertical_background(
-      map_color_scheme.c[0],
-      map_color_scheme.c[1]
+      map_color_scheme.a[0],
+      map_color_scheme.a[1]
     );
     // this.fill_texture_background("rock_map");
   }
@@ -124,8 +125,12 @@ export class Canvas {
    * @author: Banana
    */
   vision_origin() {
+    this.ctx.beginPath();
+    this.ctx.lineWidth = 5;
+    this.ctx.strokeStyle = "black";
     this.ctx.moveTo(0, 0);
-    this.ctx.lineTo(0, 30);
+    this.ctx.lineTo(0, 15);
     this.ctx.stroke();
+    this.ctx.closePath();
   }
 }

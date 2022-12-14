@@ -17,11 +17,19 @@ function init() {
   let canvasElement = document.querySelector("#main_canvas");
   window.game_canvas = new Canvas(canvasElement);
 
+  console.log(
+    "单格大小 :>> ",
+    window.game_canvas.square_width,", ",
+    window.game_canvas.square_height
+  );
+
   tank_list.push(new Tank(300, 200, 180, 160, 160, "red", 0, false));
+  tank_list[0].tank.action = 0;
+  // tank_list[0].cannon.rotate_state = false;
+
   tank_list.push(new Tank(120, 100, 0, 0, 0, "blue", 0, false));
-  // tank_list[0].tank.action = 0;
-  // tank_list[1].tank.action = 0;
-  // tank_list[1].radar.rotate_state = false;
+  tank_list[1].tank.action = 0;
+  tank_list[1].radar.rotate_state = false;
 
   // tank_list[1].cannon_rotate = false;
   // tank_list.push(new Tank(100, 0, 90, 0, 0, "green", 0, false));
