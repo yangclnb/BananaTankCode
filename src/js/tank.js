@@ -162,9 +162,10 @@ export class Tank {
     if (this.cannon.thread !== null) {
       ctx.beginPath();
       ctx.lineWidth = 5;
+      ctx.lineCap='round'
       ctx.strokeStyle = "rgba(254, 67, 101, 1)";
-      ctx.moveTo(0, 0);
-      ctx.lineTo(40, 0);
+      ctx.moveTo(-20, 0);
+      ctx.lineTo(20, 0);
       ctx.stroke();
       ctx.closePath();
     }
@@ -425,24 +426,20 @@ export class Tank {
   get_tank_collision_volume(x, y, collision_value) {
     // 计算两点之间的斜率
     const current_k = y / x;
+    // 偏移量
+    const offset_distance = window.game_canvas.average_length_width / 2;
 
     // 向原点移动一段距离
-
-    x =
-      x > 0
-        ? x - window.game_canvas.average_length_width
-        : x + window.game_canvas.average_length_width;
-    y = current_k * x;
+    // x = x > 0 ? x - offset_distance : x + offset_distance;
+    // y = current_k * x;
 
     // 计算过该点而且垂直于当前斜率的函数的斜率 点(a,ak)  f(x)=-x/k + a(k+1/k)
     const left_y =
-      x * (current_k + 1 / current_k) -
-      (x - window.game_canvas.average_length_width) / current_k;
+      x * (current_k + 1 / current_k) - (x - offset_distance) / current_k;
     const left_x = x * (Math.pow(current_k, 2) + 1) - current_k * left_y;
 
     const right_y =
-      x * (current_k + 1 / current_k) -
-      (x + window.game_canvas.average_length_width) / current_k;
+      x * (current_k + 1 / current_k) - (x + offset_distance) / current_k;
     const right_x = x * (Math.pow(current_k, 2) + 1) - current_k * right_y;
     // alert(
     //   `x ${x}, y ${y}, left_x ${left_x}, left_y ${left_y}, right_x ${right_x}, right_y ${right_y}`
@@ -561,19 +558,52 @@ export class Tank {
       // 排除自己的位置
       if (key === this.tank.color) continue;
 
+      // 炮弹坐标
+
+      const real_cannon_x = this.cannon.x + this.tank.x;
+      const real_cannon_y = this.cannon.y + this.tank.y;
+
       let [x, y] = this.format_position(
         value[0],
         value[1],
-        this.cannon.x + this.tank.x,
-        this.cannon.y + this.tank.y
+        real_cannon_x,
+        real_cannon_y
       );
 
-      console.log("this.tank.color,x,y :>> ", this.tank.color, x, y);
+      if (x > 100 || y > 100) continue; // 若炮弹距离太远就之间跳过
 
       const [left_x, left_y, right_x, right_y] = this.get_tank_collision_volume(
         x,
         y
       );
+
+      const real_left_x = left_x + real_cannon_x;
+      const real_left_y = real_cannon_y - left_y;
+      const real_right_x = right_x + real_cannon_x;
+      const real_right_y = real_cannon_y - right_y;
+
+      window.game_canvas.vision_position(real_left_x, real_left_y, "red");
+      window.game_canvas.vision_position(real_right_x, real_right_y, "gold");
+      window.game_canvas.vision_position(real_cannon_x, real_cannon_y, "black");
+
+      console.log(
+        `炮弹(${real_cannon_x},${real_cannon_y}) \n
+        左侧(${real_left_x},${real_left_y}) 
+        \n右侧(${real_right_x},${real_right_y})`
+      );
+
+      if (
+        this.check_area_point(
+          real_cannon_x,
+          real_cannon_y,
+          real_left_x,
+          real_left_y,
+          real_right_x,
+          real_right_y
+        )
+      ) {
+        alert(this.tank.color + " 击中！=> " + key);
+      }
       // alert(left_x, left_y, right_x, right_y);
     }
   }
@@ -614,5 +644,33 @@ export class Tank {
       if (y > 0) return 2;
       else if (y < 0) return 3;
     }
+  }
+
+  /**
+   * @function: determine_quadrant_by_position
+   * @description: 检查坐标是否在范围内
+   * @param {Number} check_x 检测点的x位置
+   * @param {Number} check_y 检测点的y位置
+   * @param {Number} area_left_x 区域左边端点的x位置
+   * @param {Number} area_left_y 区域左边端点的y位置
+   * @param {Number} area_right_x 区域右边端点的x位置
+   * @param {Number} area_right_y 区域右边端点的y位置
+   * @return {Boolean} 是否在范围内
+   * @author: Banana
+   */
+  check_area_point(
+    check_x,
+    check_y,
+    area_left_x,
+    area_left_y,
+    area_right_x,
+    area_right_y
+  ) {
+    if (area_left_x > check_x || check_x > area_right_x) return false;
+
+    const max_y = Math.max(area_left_y, area_right_y);
+    const min_y = Math.min(area_left_y, area_right_y);
+    if (min_y <= check_y && check_y <= max_y) return true;
+    else return false;
   }
 }

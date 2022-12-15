@@ -133,4 +133,24 @@ export class Canvas {
     this.ctx.stroke();
     this.ctx.closePath();
   }
+
+  /**
+   * @function: vision_position
+   * @description: canvas 调整过程中确定指定坐标点的位置
+   * @author: Banana
+   */
+  vision_position(x, y, color) {
+    let stack = this.translate_stack();
+    stack("push", [x, y], (a, b) => {
+      this.ctx.translate(a, b);
+    });
+    this.ctx.beginPath();
+    this.ctx.lineWidth = 10;
+    this.ctx.strokeStyle = color;
+    this.ctx.moveTo(0, 0);
+    this.ctx.lineTo(10, 0);
+    this.ctx.stroke();
+    this.ctx.closePath();
+    stack("pop");
+  }
 }
