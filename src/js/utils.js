@@ -31,7 +31,7 @@ export const classify_radian = (input_radian) => {
       : input_radian;
 
   // 将负角度转化为正角度计算
-  if (input_radian <= 0) input_radian = angle(360) - input_radian;
+  if (input_radian <= 0) input_radian = angle(360) + input_radian;
 
   return input_radian;
 };

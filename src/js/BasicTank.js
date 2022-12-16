@@ -47,6 +47,7 @@ export class Tank {
     this.cannon = {
       x: 0,
       y: 0,
+      reload_time: 3000, // 装填所需时间 (毫秒)
       distance: 0, // 初始化炮弹移动的距离
       cannonball_angle: 0, // 炮弹发射时的斜率
       angle: angle(cannon_angle), //炮管的指向角度
@@ -69,6 +70,11 @@ export class Tank {
     // 存储最初位置
     window.tank_position.set(this.tank.color, this.get_current_position());
     this.draw();
+  }
+
+  injured() {
+    //TODO 挨炮后 血条移动
+    //TODO 血条清零 坦克消失
   }
 
   /**
@@ -161,11 +167,11 @@ export class Tank {
 
     if (this.cannon.thread !== null) {
       ctx.beginPath();
-      ctx.lineWidth = 5;
-      ctx.lineCap='round'
-      ctx.strokeStyle = "rgba(254, 67, 101, 1)";
-      ctx.moveTo(-20, 0);
-      ctx.lineTo(20, 0);
+      ctx.lineWidth = 10;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = this.tank.color;
+      ctx.moveTo(-2.5, 0);
+      ctx.lineTo(2.5, 0);
       ctx.stroke();
       ctx.closePath();
     }
@@ -194,6 +200,13 @@ export class Tank {
 
     translate_stack("pop");
     translate_stack("pop");
+  }
+
+  run() {
+    this.move();
+    this.adjust_tank_direction();
+    this.adjust_cannon_direction();
+    this.adjust_radar_direction();
   }
 
   /**
@@ -458,8 +471,7 @@ export class Tank {
     for (let [key, value] of window.tank_position) {
       // 排除自己的位置
       if (key === this.tank.color) continue;
-
-      //TODO 敌友判断
+      //TODO 敌友判断 | 跳过已经被摧毁的坦克
 
       const [x, y] = this.format_position(
         value[0],
@@ -481,17 +493,33 @@ export class Tank {
       // 判断敌方坦克所在的象限
       const current_enemy_quadrant = this.determine_quadrant_by_position(x, y);
 
-      // console.log("current_radar_quadrant :>> ", current_radar_quadrant);
+      console.log("current_radar_quadrant :>> ", current_radar_quadrant);
 
+      //TODO 垂直情况未检测
+
+      console.log(
+        "radian(k) :>> ",
+        current_radar_quadrant,
+        current_enemy_quadrant,
+        this.tank.color,
+        (180 * Math.atan(k)) / Math.PI
+      );
       // 水平情况
-      if (y === 0 && (x > 0 ? "+x" : "-x") === current_radar_quadrant) {
-        console.log(`${this.tank.color} : find you! => ${key}`);
-        // return radian(this.radar.angle);
-      } else if (
-        current_radar_quadrant === current_enemy_quadrant &&
+      if (
+        this.check_quadrant_situation(
+          current_radar_quadrant,
+          current_enemy_quadrant
+        ) &&
         parseFloat(k) + 0.29 >= current_k &&
         parseFloat(k) - 0.29 <= current_k
       ) {
+        console.log(
+          "radian(k) :>> ",
+          current_radar_quadrant,
+          current_enemy_quadrant,
+          this.tank.color,
+          (180 * Math.atan(k)) / Math.PI
+        );
         this.launch_cannon();
         console.log(`${this.tank.color} : find you! => ${key}`);
         // return radian(this.radar.angle);
@@ -522,7 +550,7 @@ export class Tank {
   launch_cannon() {
     // console.log('object :>> ', Date.now() - this.cannon.launch_time);
 
-    if (Date.now() - this.cannon.launch_time >= 2000) {
+    if (Date.now() - this.cannon.launch_time >= this.cannon.reload_time) {
       clearInterval(this.cannon.thread);
       this.cannon.launch_time = Date.now();
       this.cannon.cannonball_angle = this.cannon.angle;
@@ -586,11 +614,11 @@ export class Tank {
       window.game_canvas.vision_position(real_right_x, real_right_y, "gold");
       window.game_canvas.vision_position(real_cannon_x, real_cannon_y, "black");
 
-      console.log(
-        `炮弹(${real_cannon_x},${real_cannon_y}) \n
-        左侧(${real_left_x},${real_left_y}) 
-        \n右侧(${real_right_x},${real_right_y})`
-      );
+      // console.log(
+      //   `炮弹(${real_cannon_x},${real_cannon_y}) \n
+      //   左侧(${real_left_x},${real_left_y})
+      //   \n右侧(${real_right_x},${real_right_y})`
+      // );
 
       if (
         this.check_area_point(
@@ -602,6 +630,7 @@ export class Tank {
           real_right_y
         )
       ) {
+        //TODO 集中目标触发爆炸动画 & 取消绘制线程
         alert(this.tank.color + " 击中！=> " + key);
       }
       // alert(left_x, left_y, right_x, right_y);
@@ -617,7 +646,6 @@ export class Tank {
    */
   determine_quadrant_by_radian(current_radian) {
     let angle = radian(classify_radian(current_radian)).toFixed(2);
-    // console.log("angle :>> ", angle);
     if (angle == 0 || angle == 360) return "+x";
     else if (angle == 90) return "+y";
     else if (angle == 180) return "-x";
@@ -640,10 +668,49 @@ export class Tank {
     if (x > 0) {
       if (y > 0) return 1;
       else if (y < 0) return 4;
+      else if (y == 0) return "+x";
     } else if (x < 0) {
       if (y > 0) return 2;
       else if (y < 0) return 3;
+      else if (y == 0) return "-x";
+    } else if (x == 0) {
+      if (y > 0) return "+y";
+      else if (y < 0) return "-y";
     }
+  }
+
+  /**
+   * @function: check_quadrant_situation
+   * @description: 检查雷达象限 与 敌方坦克的象限是否重合
+   * @param {Number} radar_quadrant 雷达象限
+   * @param {Number} enemy_quadrant 敌方坦克象限
+   * @return {Boolean} 是否匹配
+   * @author: Banana
+   */
+  check_quadrant_situation(radar_quadrant, enemy_quadrant) {
+    if (radar_quadrant === enemy_quadrant) return true;
+    else if (
+      radar_quadrant === 1 &&
+      (enemy_quadrant === "+x" || enemy_quadrant === "+y")
+    )
+      return true;
+    else if (
+      radar_quadrant === 2 &&
+      (enemy_quadrant === "-x" || enemy_quadrant === "+y")
+    )
+      return true;
+    else if (
+      radar_quadrant === 3 &&
+      (enemy_quadrant === "-x" || enemy_quadrant === "-y")
+    )
+      return true;
+    else if (
+      radar_quadrant === 4 &&
+      (enemy_quadrant === "+x" || enemy_quadrant === "-y")
+    )
+      return true;
+
+    return false;
   }
 
   /**

@@ -1,6 +1,7 @@
 import "./less/index.less";
-import { Canvas } from "./js/canvas";
-import { Tank } from "./js/tank";
+import { Canvas } from "./js/Canvas";
+import { Tank } from "./js/BasicTank";
+import { UserTank } from "./js/UserTank";
 // import resource_img from "./img/tank.png";
 import resource_img from "./img/tank_no_background.png";
 import { angle } from "./js/utils";
@@ -19,17 +20,21 @@ function init() {
 
   console.log(
     "单格大小 :>> ",
-    window.game_canvas.square_width,", ",
+    window.game_canvas.square_width,
+    ", ",
     window.game_canvas.square_height
   );
 
-  tank_list.push(new Tank(300, 200, 180, 160, 160, "red", 0, false));
-  tank_list[0].tank.action = 0;
+  // tank_list.push(new Tank(300, 220, 180, 160, 160, "red", 0, false));
+  // tank_list[0].tank.action = 0;
   // tank_list[0].cannon.rotate_state = false;
 
-  tank_list.push(new Tank(120, 100, 0, 0, 0, "blue", 0, false));
-  tank_list[1].tank.action = 0;
-  tank_list[1].radar.rotate_state = false;
+  tank_list.push(new UserTank(200, 220, 180, 160, 160, "blue", 0, false));
+  // tank_list[1].tank.action = 0;
+
+  // tank_list.push(new Tank(300, 20, 170, 90, 0, "blue", 0, false));
+  // tank_list[1].tank.action = 0;
+  // tank_list[1].radar.rotate_state = false;
 
   // tank_list[1].cannon_rotate = false;
   // tank_list.push(new Tank(100, 0, 90, 0, 0, "green", 0, false));
@@ -43,10 +48,8 @@ function animate() {
   // console.log('window.tank_position :>> ', window.tank_position);
   tank_list.forEach((tank_item) => {
     // console.log('object :>> ', tank_item.tank_action);
-    tank_item.move();
-    tank_item.adjust_tank_direction();
-    tank_item.adjust_cannon_direction();
-    tank_item.adjust_radar_direction();
+    tank_item.run();
+    tank_item.draw();
   });
   requestAnimationFrame(animate);
 }
