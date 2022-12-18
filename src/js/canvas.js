@@ -17,7 +17,7 @@ export class Canvas {
     this.init();
   }
 
-  init(tank_list) {
+  init() {
     this.create_vertical_background(
       map_color_scheme.a[0],
       map_color_scheme.a[1]

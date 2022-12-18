@@ -216,7 +216,8 @@ export class Tank {
    */
   move() {
     // 当前坦克行为不是移动，直接退出
-    if (this.tank.action !== tank_action.tank_move) return;
+    
+    // if (this.tank.action !== tank_action.tank_move) return;
 
     let [x_move, y_move] = this.compute_quadrant(
       this.tank.speed,
@@ -247,9 +248,10 @@ export class Tank {
       this.collision_detection("y");
     }
 
+    // 全局更新坦克坐标
     window.tank_position.set(this.tank.color, this.get_current_position());
 
-    this.draw();
+    return this.tank.speed;
   }
 
   /**
@@ -267,8 +269,6 @@ export class Tank {
       this.tank.turn_direction === 0
         ? this.tank.angle - this.tank.rotate_speed
         : this.tank.angle + this.tank.rotate_speed;
-
-    this.draw();
   }
 
   /**
@@ -286,8 +286,6 @@ export class Tank {
       this.cannon.turn_direction === 0
         ? this.cannon.angle - this.cannon.rotate_speed
         : this.cannon.angle + this.cannon.rotate_speed;
-
-    this.draw();
   }
 
   /**
@@ -309,7 +307,6 @@ export class Tank {
         : this.radar.angle + this.radar.rotate_speed;
 
     this.search_enemy(this.radar.angle);
-    this.draw();
   }
 
   /**

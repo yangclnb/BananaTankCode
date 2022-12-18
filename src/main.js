@@ -29,8 +29,11 @@ function init() {
   // tank_list[0].tank.action = 0;
   // tank_list[0].cannon.rotate_state = false;
 
-  tank_list.push(new UserTank(200, 220, 180, 160, 160, "blue", 0, false));
-  // tank_list[1].tank.action = 0;
+  tank_list.push(new UserTank(200, 220, 180, 180, 180, "blue", 0, false));
+  tank_list[0].run = function(){
+    tank_list[0].ahead(100);
+    tank_list[0].back(100);
+  }
 
   // tank_list.push(new Tank(300, 20, 170, 90, 0, "blue", 0, false));
   // tank_list[1].tank.action = 0;
@@ -40,6 +43,10 @@ function init() {
   // tank_list.push(new Tank(100, 0, 90, 0, 0, "green", 0, false));
   // tank_list.push(new Tank(400, 120, 270, 0, 0, "yellow", 0, false));
 
+  tank_list.forEach((tank_item) => {
+    tank_item.run();
+  });
+
   animate();
 }
 
@@ -48,7 +55,7 @@ function animate() {
   // console.log('window.tank_position :>> ', window.tank_position);
   tank_list.forEach((tank_item) => {
     // console.log('object :>> ', tank_item.tank_action);
-    tank_item.run();
+    tank_item.implement_current_operation();
     tank_item.draw();
   });
   requestAnimationFrame(animate);
