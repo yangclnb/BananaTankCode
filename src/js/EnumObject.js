@@ -39,3 +39,8 @@ export const action_mode = {
   synchronous: "synchronous",
   asynchronous: "asynchronous",
 };
+
+// 事件及其优先级
+export const event_priority = {
+  general_events: 1,
+};

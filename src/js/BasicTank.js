@@ -39,7 +39,7 @@ export class Tank {
       current_state: tank_state.normal, // 坦克状态
       action: tank_action.tank_move, // 坦克行为
       speed: 0.5, // 移动速度
-      rotate_speed: angle(1), // 一帧调整坦克朝向1°
+      rotate_speed: angle(0.25), // 一帧调整坦克朝向0.25°
       turn_direction: tank_turn.left, // 下次坦克的转向
       move_direction: tank_action.tank_move_direction.front, // 坦克移动方向
     };
@@ -53,7 +53,7 @@ export class Tank {
       angle: angle(cannon_angle), //炮管的指向角度
       rotate_state: true, // 是否允许炮口旋转
       launch_speed: 15, // 最大炮弹速
-      rotate_speed: angle(0.5), // 一帧旋转炮塔1°
+      rotate_speed: angle(0.5), // 一帧旋转炮塔0.5°
       turn_direction: tank_turn.left, // 下次炮管的转向
       launch_time: 0, // 上次发射时间
       thread: null, // 炮弹移动线程
@@ -62,7 +62,7 @@ export class Tank {
     this.radar = {
       angle: angle(radar_angle),
       rotate_state: true, // 是否允许雷达旋转
-      rotate_speed: angle(0.5), // 一帧雷达扫描1°
+      rotate_speed: angle(0.5), // 一帧雷达扫描0.5°
       turn_direction: tank_turn.left, // 下次雷达的转向
       largest_distance: window.game_canvas.square_width * 8, // 最远扫描距离
     };
@@ -202,28 +202,19 @@ export class Tank {
     translate_stack("pop");
   }
 
-  run() {
-    this.move();
-    this.adjust_tank_direction();
-    this.adjust_cannon_direction();
-    this.adjust_radar_direction();
-  }
-
   /**
    * @function: move
    * @description: 坦克移动
    * @author: Banana
    */
   move() {
-    // 当前坦克行为不是移动，直接退出
-    
-    // if (this.tank.action !== tank_action.tank_move) return;
-
     let [x_move, y_move] = this.compute_quadrant(
       this.tank.speed,
       this.tank.angle,
       this.tank.move_direction
     );
+
+    // console.log("angle :>> ",this.tank, classify_radian(radian(this.tank.angle)));
 
     //TODO 拆分边界检测 为 函数
     const square_width = window.game_canvas.square_width;
@@ -260,15 +251,14 @@ export class Tank {
    * @author: Banana
    */
   adjust_tank_direction() {
-    if (this.tank.action !== tank_action.adjust_tank_direction) return;
-
-    this.tank.angle = classify_radian(this.tank.angle);
-
     // 判断顺逆时针旋转
     this.tank.angle =
       this.tank.turn_direction === 0
-        ? this.tank.angle - this.tank.rotate_speed
-        : this.tank.angle + this.tank.rotate_speed;
+        ? this.tank.angle + this.tank.rotate_speed
+        : this.tank.angle - this.tank.rotate_speed;
+
+    this.tank.angle = classify_radian(this.tank.angle);
+    return this.tank.rotate_speed;
   }
 
   /**
@@ -277,15 +267,14 @@ export class Tank {
    * @author: Banana
    */
   adjust_cannon_direction() {
-    if (this.cannon.rotate_state === false) return;
-
-    this.cannon.angle = classify_radian(this.cannon.angle);
-
     // 判断顺逆时针旋转
     this.cannon.angle =
       this.cannon.turn_direction === 0
-        ? this.cannon.angle - this.cannon.rotate_speed
-        : this.cannon.angle + this.cannon.rotate_speed;
+        ? this.cannon.angle + this.cannon.rotate_speed
+        : this.cannon.angle - this.cannon.rotate_speed;
+
+    this.cannon.angle = classify_radian(this.cannon.angle);
+    return this.cannon.rotate_speed;
   }
 
   /**
@@ -295,18 +284,16 @@ export class Tank {
    * @author: Banana
    */
   adjust_radar_direction() {
-    if (this.radar.rotate_state === false) return;
-
-    // console.log('this.tank.color,this.radar.angle :>> ', this.tank.color,this.radar.angle);
-    this.radar.angle = classify_radian(this.radar.angle);
-
     // 判断顺逆时针旋转
     this.radar.angle =
       this.radar.turn_direction === 0
-        ? this.radar.angle - this.radar.rotate_speed
-        : this.radar.angle + this.radar.rotate_speed;
+        ? this.radar.angle + this.radar.rotate_speed
+        : this.radar.angle - this.radar.rotate_speed;
+
+    this.radar.angle = classify_radian(this.radar.angle);
 
     this.search_enemy(this.radar.angle);
+    return this.radar.rotate_speed;
   }
 
   /**
@@ -334,7 +321,7 @@ export class Tank {
     let x = speed / k;
     let y = speed * k;
 
-    // alert(`${k} | ${x} | ${y} | ${radian(currentAngle)}`);
+    // console.log(`${k} | ${x} | ${y} | ${radian(currentAngle)}`);
 
     // 在tan 0时 可以把函数看作是y=0。则x趋近于∞，直接返回x轴的速率即可
     if (x == Infinity) [x, y] = [speed, 0];
@@ -358,7 +345,7 @@ export class Tank {
       }
     }
 
-    // alert(`${x} | ${y}`);
+    // console.log(`${x} | ${y}`);
 
     // console.log("this.tank.turn_direction :>> ", this.tank.move_direction);
     if (direction === tank_action.tank_move_direction.front) {
@@ -517,7 +504,7 @@ export class Tank {
           this.tank.color,
           (180 * Math.atan(k)) / Math.PI
         );
-        this.launch_cannon();
+        // this.launch_cannon();
         console.log(`${this.tank.color} : find you! => ${key}`);
         // return radian(this.radar.angle);
       }

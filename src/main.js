@@ -4,7 +4,7 @@ import { Tank } from "./js/BasicTank";
 import { UserTank } from "./js/UserTank";
 // import resource_img from "./img/tank.png";
 import resource_img from "./img/tank_no_background.png";
-import { angle } from "./js/utils";
+import { angle, classify_radian, radian } from "./js/utils";
 
 window.tank_img = new Image();
 window.tank_position = new Map();
@@ -29,11 +29,23 @@ function init() {
   // tank_list[0].tank.action = 0;
   // tank_list[0].cannon.rotate_state = false;
 
-  tank_list.push(new UserTank(200, 220, 180, 180, 180, "blue", 0, false));
-  tank_list[0].run = function(){
-    tank_list[0].ahead(100);
+  tank_list.push(new UserTank(200, 220, 0, 0, 0, "blue", 0, false));
+  tank_list[0].run = function () {
+    tank_list[0].fire();
+    tank_list[0].ahead(200);
+    tank_list[0].tank_turn(45);
+    tank_list[0].ahead(200);
+    tank_list[0].tank_turn(-45);
     tank_list[0].back(100);
-  }
+    tank_list[0].tank_turn(90);
+    tank_list[0].ahead(20);
+    tank_list[0].tank_turn(-180);
+    tank_list[0].ahead(200);
+    tank_list[0].cannon_turn(-90);
+    tank_list[0].radar_turn(90);
+    tank_list[0].fire();
+    
+  };
 
   // tank_list.push(new Tank(300, 20, 170, 90, 0, "blue", 0, false));
   // tank_list[1].tank.action = 0;
