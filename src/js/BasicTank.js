@@ -3,10 +3,15 @@ import {
   tank_action,
   tank_state,
   tank_turn,
+  action_mode,
+  event_priority,
 } from "./EnumObject";
 import { angle, classify_radian, radian } from "./utils";
 
 export class Tank {
+  action_queue = new Array(); // 行为队列
+  execution_mode = action_mode.synchronous; // 默认动作从上到下顺序执行
+
   /**
    * @param {Number} x 横坐标
    * @param {Number} y 纵坐标
@@ -47,7 +52,9 @@ export class Tank {
     this.cannon = {
       x: 0,
       y: 0,
-      reload_time: 3000, // 装填所需时间 (毫秒)
+      launch_x: 0,
+      launch_y: 0,
+      reload_time: 2000, // 装填所需时间 (毫秒)
       distance: 0, // 初始化炮弹移动的距离
       cannonball_angle: 0, // 炮弹发射时的斜率
       angle: angle(cannon_angle), //炮管的指向角度
@@ -66,6 +73,8 @@ export class Tank {
       turn_direction: tank_turn.left, // 下次雷达的转向
       largest_distance: window.game_canvas.square_width * 8, // 最远扫描距离
     };
+
+    this.current_show_text = "";
 
     // 存储最初位置
     window.tank_position.set(this.tank.color, this.get_current_position());
@@ -101,6 +110,19 @@ export class Tank {
     translate_stack("push", [-angle(90)], (a) => {
       ctx.rotate(a);
     });
+
+    // 显示文字 ------------------------
+
+    translate_stack("push", [angle(90)], (a) => {
+      ctx.rotate(a);
+    });
+    ctx.direction = "ltr"; // 文本方向从左向右
+    ctx.font = "15px serif"; // 设置文案大小和字体
+    ctx.textAlign = "center";
+    ctx.fillStyle = "black";
+    ctx.fillText(this.current_show_text, 0, -50);
+
+    translate_stack("pop");
 
     // 坦克  ---------------------------
 
@@ -167,7 +189,7 @@ export class Tank {
 
     if (this.cannon.thread !== null) {
       ctx.beginPath();
-      ctx.lineWidth = 10;
+      ctx.lineWidth = 5;
       ctx.lineCap = "round";
       ctx.strokeStyle = this.tank.color;
       ctx.moveTo(-2.5, 0);
@@ -205,18 +227,32 @@ export class Tank {
   /**
    * @function: move
    * @description: 坦克移动
+   * @return {Number} 当前移动的速度
    * @author: Banana
    */
   move() {
+    // console.log("angle :>> ",this.tank, classify_radian(radian(this.tank.angle)));
+    let [x_move, y_move] = this.check_hit_wall();
+    this.tank.x += x_move;
+    this.tank.y += y_move;
+    // 全局更新坦克坐标
+    window.tank_position.set(this.tank.color, this.get_current_position());
+
+    return this.tank.speed;
+  }
+
+  /**
+   * @function: check_hit_wall
+   * @description: 撞墙检测，未碰撞到墙体 x,y 位置改变，否则返回触发撞墙回调函数
+   * @return {List} [x_move,y_move] x移动的距离，y移动的距离
+   * @author: Banana
+   */
+  check_hit_wall() {
     let [x_move, y_move] = this.compute_quadrant(
       this.tank.speed,
       this.tank.angle,
       this.tank.move_direction
     );
-
-    // console.log("angle :>> ",this.tank, classify_radian(radian(this.tank.angle)));
-
-    //TODO 拆分边界检测 为 函数
     const square_width = window.game_canvas.square_width;
     const square_height = window.game_canvas.square_height;
     const canvas_width = window.game_canvas.canvas.width;
@@ -225,24 +261,38 @@ export class Tank {
       this.tank.x >= square_width / 2 &&
       this.tank.x <= canvas_width - square_width / 2
     ) {
-      this.tank.x += x_move;
+      // this.tank.x += x_move;
     } else {
-      this.collision_detection("x");
+      this.tank.x -= x_move; //撞击后反方向倒退
+      this.current_behavior_execution(event_priority.hitWall) === undefined &&
+        this.on_hit_wall.operation("x");
+      return [0, 0];
     }
 
     if (
       this.tank.y >= square_height / 2 &&
       this.tank.y <= canvas_height - square_height / 2
     ) {
-      this.tank.y += y_move;
+      // this.tank.y += y_move;
     } else {
-      this.collision_detection("y");
+      this.tank.y -= y_move; //撞击后反方向倒退
+      this.current_behavior_execution(event_priority.hitWall) === undefined &&
+        this.on_hit_wall.operation("y");
+      return [0, 0];
     }
+    return [x_move, y_move];
+  }
 
-    // 全局更新坦克坐标
-    window.tank_position.set(this.tank.color, this.get_current_position());
-
-    return this.tank.speed;
+  /**
+   * @function: show_text
+   * @description: 说垃圾话，在坦克正上方顶绘制，垃圾话显示时间默认两秒
+   * @author: Banana
+   */
+  show_text(text, delay = 2000) {
+    this.current_show_text = text;
+    setTimeout(() => {
+      this.current_show_text = "";
+    }, delay);
   }
 
   /**
@@ -356,63 +406,6 @@ export class Tank {
   }
 
   /**
-   * @function: after_collision
-   * @description: 碰撞后执行
-   * @param {*} second 持续时间
-   * @return {*}
-   * @author: Banana
-   */
-  after_collision(second) {
-    // 受到撞击猛地后退一下 -> 旋转方向 -> 再次向前
-    // const k = Math.tan(this.tank.angle);
-    // this.tank.move_direction = tank_action.tank_move_direction.back;
-    // let [x_move, y_move] = this.compute_quadrant(k);
-    // this.tank.x += x_move * 5;
-    // this.tank.y += y_move * 5;
-    // this.tank.action = tank_action.adjust_tank_direction;
-    // setTimeout(() => {
-    //   this.tank.action = tank_action.tank_move;
-    //   this.tank.move_direction = tank_action.tank_move_direction.front;
-    // }, second);
-
-    // 受到撞击倒退0.05s -> 旋转方向 -> 再次向前
-    this.tank.move_direction = tank_action.tank_move_direction.back;
-    let [x_move, y_move] = this.compute_quadrant(
-      this.tank.speed,
-      this.tank.angle,
-      this.tank.move_direction
-    );
-    console.log("x_move,y_move :>> ", x_move, y_move);
-    this.tank.x += x_move;
-    this.tank.y += y_move;
-    setTimeout(() => {
-      this.tank.action = tank_action.adjust_tank_direction;
-      setTimeout(() => {
-        this.tank.action = tank_action.tank_move;
-        this.tank.move_direction = tank_action.tank_move_direction.front;
-      }, second);
-    }, 50);
-  }
-
-  /**
-   * @function: collision_detection
-   * @description: 碰撞检测
-   * @param {*} direction 碰撞的轴向
-   * @author: Banana
-   */
-  collision_detection(direction) {
-    //! 命名与实际含义不符合
-    // if (direction === "x") {
-    //   // x碰撞左转
-    //   this.tank.turn_direction = tank_turn.left;
-    // } else if (direction === "y") {
-    //   // y碰撞右转
-    //   this.tank.turn_direction = tank_turn.right;
-    // }
-    this.after_collision(500);
-  }
-
-  /**
    * @function: get_tank_collision_volume
    * @description: 获取坦克碰撞体积, 获取目标坦克位置垂直函数，计算该函数的两个端点(需 format_position 后)
    * @param {*} x 目标坦克的x位置
@@ -421,23 +414,43 @@ export class Tank {
    * @author: Banana
    */
   get_tank_collision_volume(x, y, collision_value) {
-    // 计算两点之间的斜率
-    const current_k = y / x;
+    let left_y, left_x, right_x, right_y;
     // 偏移量
     const offset_distance = window.game_canvas.average_length_width / 2;
 
-    // 向原点移动一段距离
-    // x = x > 0 ? x - offset_distance : x + offset_distance;
-    // y = current_k * x;
+    // y = 0 情况下单独计算
+    if (y === 0) {
+      return [
+        x - offset_distance,
+        offset_distance,
+        x + offset_distance,
+        -offset_distance,
+      ];
+    }
+
+    const current_k = y / x;
+
+    if (Math.abs(current_k) >= 1) {
+      // 计算两点之间的斜率，当 斜率绝对值>=1 时，其垂线函数两端取值范围取 x+-offset_distance
+      left_y =
+        x * (current_k + 1 / current_k) - (x - offset_distance) / current_k;
+      left_x = x * (Math.pow(current_k, 2) + 1) - current_k * left_y;
+
+      right_y =
+        x * (current_k + 1 / current_k) - (x + offset_distance) / current_k;
+      right_x = x * (Math.pow(current_k, 2) + 1) - current_k * right_y;
+    } else {
+      // 反之 y+-offset_distance
+      left_x =
+        x * (Math.pow(current_k, 2) + 1) - current_k * (y + offset_distance);
+      left_y = x * (current_k + 1 / current_k) - left_x / current_k;
+
+      right_x =
+        x * (Math.pow(current_k, 2) + 1) - current_k * (y - offset_distance);
+      right_y = x * (current_k + 1 / current_k) - right_x / current_k;
+    }
 
     // 计算过该点而且垂直于当前斜率的函数的斜率 点(a,ak)  f(x)=-x/k + a(k+1/k)
-    const left_y =
-      x * (current_k + 1 / current_k) - (x - offset_distance) / current_k;
-    const left_x = x * (Math.pow(current_k, 2) + 1) - current_k * left_y;
-
-    const right_y =
-      x * (current_k + 1 / current_k) - (x + offset_distance) / current_k;
-    const right_x = x * (Math.pow(current_k, 2) + 1) - current_k * right_y;
     // alert(
     //   `x ${x}, y ${y}, left_x ${left_x}, left_y ${left_y}, right_x ${right_x}, right_y ${right_y}`
     // );
@@ -477,18 +490,17 @@ export class Tank {
       // 判断敌方坦克所在的象限
       const current_enemy_quadrant = this.determine_quadrant_by_position(x, y);
 
-      console.log("current_radar_quadrant :>> ", current_radar_quadrant);
+      // console.log("current_radar_quadrant :>> ", current_radar_quadrant);
 
       //TODO 垂直情况未检测
 
-      console.log(
-        "radian(k) :>> ",
-        current_radar_quadrant,
-        current_enemy_quadrant,
-        this.tank.color,
-        (180 * Math.atan(k)) / Math.PI
-      );
-      // 水平情况
+      // console.log(
+      //   "radian(k) :>> ",
+      //   current_radar_quadrant,
+      //   current_enemy_quadrant,
+      //   this.tank.color,
+      //   (180 * Math.atan(k)) / Math.PI
+      // );
       if (
         this.check_quadrant_situation(
           current_radar_quadrant,
@@ -497,18 +509,541 @@ export class Tank {
         parseFloat(k) + 0.29 >= current_k &&
         parseFloat(k) - 0.29 <= current_k
       ) {
-        console.log(
-          "radian(k) :>> ",
-          current_radar_quadrant,
-          current_enemy_quadrant,
-          this.tank.color,
-          (180 * Math.atan(k)) / Math.PI
-        );
-        // this.launch_cannon();
         console.log(`${this.tank.color} : find you! => ${key}`);
-        // return radian(this.radar.angle);
+
+        const enemy_angle = this.get_angle_slope_position(current_k, x, y);
+
+        // 只有队列中不存在，发现敌人后而且尚未执行完毕的行为时，才再次添加该行为
+        const current_behaviour = this.current_behavior_execution(
+          event_priority.scannedRobot
+        );
+        if (current_behaviour === undefined) {
+          this.on_scanned_robot.operation(enemy_angle);
+          this.stop_scan();
+        }
       }
     }
+  }
+
+  get_angle_slope_position(k, x, y) {
+    // 根据斜率计算敌方角度
+    const enemy_angle1 = (
+      (180 * classify_radian(Math.atan(k))) /
+      Math.PI
+    ).toFixed(2);
+    let enemy_angle2;
+
+    if (enemy_angle1 >= 180) enemy_angle2 = enemy_angle1 - 180;
+    else enemy_angle2 = 180 - enemy_angle1;
+
+    const quadrant = this.determine_quadrant_by_position(x, y);
+    // console.log(`角度有 ${enemy_angle1} , ${enemy_angle2} 两种可能，由于敌方坦克处于${quadrant}象限`);
+    if (quadrant === 1 || quadrant === 2)
+      return Math.min(enemy_angle1, enemy_angle2);
+    else if (quadrant === 3 || quadrant === 4)
+      return Math.max(enemy_angle1, enemy_angle2);
+    else if (quadrant === "+x") return 0;
+    else if (quadrant === "+y") return 90;
+    else if (quadrant === "-x") return 180;
+    else if (quadrant === "-x") return 270;
+  }
+
+  // 停止雷达扫描
+  stop_scan() {
+    // console.log(this.action_queue)
+    const action_index = this.action_queue.findIndex(
+      (item) =>
+        item.function === "adjust_radar_direction" &&
+        item.execute_state === true
+    );
+    this.action_queue[action_index].execute_state = false;
+    // console.log("this.action_queues :>> ", JSON.stringify(this.action_queue));
+    // this.action_queue.splice(action_index, 1);
+  }
+
+  // 继续线程中的雷达扫描
+  continual_scan() {
+    console.log("this.action_queue :>> ", this.action_queue);
+    const action = this.action_queue.find(
+      (item) =>
+        item.function === "adjust_radar_direction" &&
+        item.execute_state === false
+    );
+    action.execute_state = true;
+    // console.log("action :>> ", action);
+  }
+
+  // 初始化运行
+  run = {
+    // 正常运行时操作
+    operation() {},
+    // 说垃圾话
+    say: (text) => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "show_text",
+        argu: 1,
+        text,
+        priority: event_priority.run,
+        callback: null,
+      });
+    },
+    // 坦克前进（前进位置）
+    ahead: (move_distance, callback) => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "move",
+        argu: move_distance,
+        priority: event_priority.run,
+        callback,
+      });
+    },
+
+    // 坦克后退
+    back: (move_distance, callback) => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "move",
+        argu: -move_distance,
+        priority: event_priority.run,
+        callback,
+      });
+    },
+
+    // 坦克旋转 正值👈 | 负值👉
+    tank_turn: (turn_angle, callback) => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "adjust_tank_direction",
+        argu: turn_angle,
+        priority: event_priority.run,
+        callback,
+      });
+    },
+
+    // 炮口旋转
+    cannon_turn: (turn_angle, callback) => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "adjust_cannon_direction",
+        argu: turn_angle,
+        priority: event_priority.run,
+        callback,
+      });
+    },
+
+    // 雷达旋转
+    radar_turn: (turn_angle, callback) => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "adjust_radar_direction",
+        argu: turn_angle,
+        priority: event_priority.run,
+        callback,
+      });
+    },
+
+    // 开火
+    fire: (callback) => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "launch_cannon",
+        argu: 1,
+        priority: event_priority.run,
+        callback,
+      });
+    },
+  };
+
+  // 发现敌人时调用
+  on_scanned_robot = {
+    // enemy_angle 敌人的角度
+    operation(enemy_angle) {
+      console.log(
+        "敌人相对我的位置 :>> ",
+        this.get_cannnon_reload_timee(),
+        Date.now() - this.get_last_launch_time()
+      );
+      if (
+        this.get_cannnon_reload_timee() <=
+        Date.now() - this.get_last_launch_time()
+      ) {
+        this.say("我发现你了~");
+        const cannon_angle = this.get_current_cannon_angle();
+        console.log("enemy_angle,cannon_angle :>> ", enemy_angle, cannon_angle);
+        // this.cannon_turn(70);
+        this.cannon_turn(enemy_angle - cannon_angle);
+        this.fire();
+        console.log(
+          "this.action_queues :>> ",
+          JSON.stringify(this.action_queue)
+        );
+
+        console.log("angle :>> ", enemy_angle);
+      }
+      this.continual_scan();
+    },
+    // 返回当前炮管的角度
+    get_current_cannon_angle: () => {
+      return radian(this.cannon.angle);
+    },
+
+    // 返回当前雷达的角度
+    get_current_radar_angle: () => {
+      return radian(this.radar.angle);
+    },
+
+    // 获取最近一次 炮弹 发射的事件
+    get_last_launch_time: () => {
+      return this.cannon.launch_time;
+    },
+
+    // 获取炮弹装填事件
+    get_cannnon_reload_timee: () => {
+      return this.cannon.reload_time;
+    },
+
+    // 说垃圾话
+    say: (text) => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "show_text",
+        argu: 1,
+        text,
+        priority: event_priority.scannedRobot,
+        callback: null,
+      });
+    },
+
+    // 坦克前进（前进位置）
+    ahead: (move_distance, callback) => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "move",
+        argu: move_distance,
+        priority: event_priority.scannedRobot,
+        callback,
+      });
+    },
+
+    // 坦克后退
+    back: (move_distance, callback) => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "move",
+        argu: -move_distance,
+        priority: event_priority.scannedRobot,
+        callback,
+      });
+    },
+
+    // 坦克旋转 正值👈 | 负值👉
+    tank_turn: (turn_angle, callback) => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "adjust_tank_direction",
+        argu: turn_angle,
+        priority: event_priority.scannedRobot,
+        callback,
+      });
+    },
+
+    // 炮口旋转
+    cannon_turn: (turn_angle, callback) => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "adjust_cannon_direction",
+        argu: turn_angle,
+        priority: event_priority.scannedRobot,
+        callback,
+      });
+    },
+
+    // 雷达旋转
+    radar_turn: (turn_angle, callback) => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "adjust_radar_direction",
+        argu: turn_angle,
+        priority: event_priority.scannedRobot,
+        callback,
+      });
+    },
+
+    // 开火
+    fire: (callback) => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "launch_cannon",
+        argu: 1,
+        priority: event_priority.scannedRobot,
+        callback,
+      });
+    },
+    // 停止雷达扫描
+    stop_scan: () => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "stop_scan",
+        argu: 1,
+        priority: event_priority.scannedRobot,
+        callback: null,
+      });
+      // this.action_queue.splice(action_index, 1);
+    },
+
+    // 继续线程中的雷达扫描
+    continual_scan: () => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "continual_scan",
+        argu: 1,
+        priority: event_priority.scannedRobot,
+        callback: null,
+      });
+      // this.action_queue[action_index].execute_state = true;
+    },
+  };
+
+  //
+  on_hit_wall = {
+    operation(hit_axis) {
+      this.say("怎么撞墙了!");
+      this.back(5);
+      this.tank_turn(45);
+      this.ahead(30);
+    },
+    get_current_cannon_angle: () => {
+      return radian(this.cannon.angle);
+    },
+
+    // 返回当前雷达的角度
+    get_current_radar_angle: () => {
+      return radian(this.radar.angle);
+    },
+
+    // 获取最近一次 炮弹 发射的事件
+    get_last_launch_time: () => {
+      return this.cannon.launch_time;
+    },
+
+    // 获取炮弹装填事件
+    get_cannnon_reload_timee: () => {
+      return this.cannon.reload_time;
+    },
+
+    // 说垃圾话
+    say: (text) => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "show_text",
+        argu: 1,
+        text,
+        priority: event_priority.hitWall,
+        callback: null,
+      });
+    },
+
+    // 坦克前进（前进位置）
+    ahead: (move_distance, callback) => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "move",
+        argu: move_distance,
+        priority: event_priority.hitWall,
+        callback,
+      });
+    },
+
+    // 坦克后退
+    back: (move_distance, callback) => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "move",
+        argu: -move_distance,
+        priority: event_priority.hitWall,
+        callback,
+      });
+    },
+
+    // 坦克旋转 正值👈 | 负值👉
+    tank_turn: (turn_angle, callback) => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "adjust_tank_direction",
+        argu: turn_angle,
+        priority: event_priority.hitWall,
+        callback,
+      });
+    },
+
+    // 炮口旋转
+    cannon_turn: (turn_angle, callback) => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "adjust_cannon_direction",
+        argu: turn_angle,
+        priority: event_priority.hitWall,
+        callback,
+      });
+    },
+
+    // 雷达旋转
+    radar_turn: (turn_angle, callback) => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "adjust_radar_direction",
+        argu: turn_angle,
+        priority: event_priority.hitWall,
+        callback,
+      });
+    },
+
+    // 开火
+    fire: (callback) => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "launch_cannon",
+        argu: 1,
+        priority: event_priority.hitWall,
+        callback,
+      });
+    },
+    // 停止雷达扫描
+    stop_scan: () => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "stop_scan",
+        argu: 1,
+        priority: event_priority.hitWall,
+        callback: null,
+      });
+      // this.action_queue.splice(action_index, 1);
+    },
+
+    // 继续线程中的雷达扫描
+    continual_scan: () => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "continual_scan",
+        argu: 1,
+        priority: event_priority.hitWall,
+        callback: null,
+      });
+      // this.action_queue[action_index].execute_state = true;
+    },
+  };
+
+  // 重复循环执行函数
+  loop() {}
+
+  // 检测当前行为执行的情况 (从行为队列中检测该优先级的行为是否还存在)
+  current_behavior_execution(priority) {
+    return this.action_queue.find((item) => item.priority === priority);
+  }
+
+  // 根据当前行为的优先级，插入动作队列的不同位置
+  organize_queue(action) {
+    // 执行状态 true:正常执行 false:暂时不执行
+    action.execute_state = true;
+    if (this.action_queue.length === 0) {
+      this.action_queue.push(action);
+      return;
+    }
+
+    let current_index = 0;
+    for (const action_item of this.action_queue) {
+      if (action_item.priority >= action.priority) {
+        ++current_index;
+      }
+    }
+
+    // 若当前索引指向队尾元素，需要在队尾+1处插入
+    current_index =
+      this.action_queue.length === current_index
+        ? current_index + 1
+        : current_index;
+
+    this.action_queue.splice(current_index, 0, action);
+    // console.log(`插入位置${current_index}`);
+    // console.log(JSON.stringify(this.action_queue));
+  }
+
+  // 执行当前队列的操作
+  implement_current_operation() {
+    if (this.action_queue.length === 0) return;
+    let operation = this.action_queue[0];
+    let current_index = 0;
+    console.log("this.action_queues :>> ", JSON.stringify(this.action_queue));
+
+    // 检测当前行为的执行状态，若为false跳转到下一个
+    while (
+      current_index < this.action_queue.length &&
+      operation.execute_state === false
+    ) {
+      operation = this.action_queue[++current_index];
+    }
+    // 若当前队列除 执行状态false 的行为外不存在其他行为，直接脱出
+    if (operation === undefined) return;
+
+    // 若 当前队首的 (已经操作数量) 大于 (预计执行的数量) 将队首出队并且重新执行该函数
+    if (Math.abs(operation.already_implemented) >= Math.abs(operation.argu)) {
+      // console.log("当前行为的索引 :>> ", current_index);
+      this.action_queue.splice(current_index, 1);
+      // this.action_queue.shift();
+      // TODO 将回调函数的内容置于队首
+      return this.implement_current_operation();
+    }
+
+    // console.log("当前执行的动作 :>> ", operation);
+
+    if (operation.function === "move") {
+      this.check_move_direction(operation.argu);
+      operation.already_implemented += this.move();
+    } else if (operation.function === "adjust_tank_direction") {
+      this.check_turn_direction(operation);
+      operation.already_implemented += radian(this.adjust_tank_direction());
+    } else if (operation.function === "adjust_cannon_direction") {
+      this.check_turn_direction(operation);
+      operation.already_implemented += radian(this.adjust_cannon_direction());
+    } else if (operation.function === "adjust_radar_direction") {
+      this.check_turn_direction(operation);
+      operation.already_implemented += radian(this.adjust_radar_direction());
+    } else if (operation.function === "launch_cannon") {
+      this.launch_cannon();
+      operation.already_implemented += 1;
+    } else if (operation.function === "continual_scan") {
+      this.continual_scan();
+      operation.already_implemented += 1;
+    } else if (operation.function === "show_text") {
+      this.show_text(operation.text);
+      operation.already_implemented += 1;
+    }
+  }
+
+  // 检测移动的方向
+  check_move_direction(number) {
+    if (number >= 0)
+      this.tank.move_direction = tank_action.tank_move_direction.front;
+    else this.tank.move_direction = tank_action.tank_move_direction.back;
+  }
+
+  // 检测当前操作的移动方向
+  check_turn_direction(operation) {
+    // 匹配需要操作的对象
+    const operation_obejct = operation.function.split("_")[1];
+    if (operation.argu >= 0)
+      eval("this." + operation_obejct).turn_direction = tank_turn.left;
+    else eval("this." + operation_obejct).turn_direction = tank_turn.right;
+  }
+
+  // 切换为同步执行模式
+  synchronous_mode() {
+    this.execution_mode = action_mode.synchronous;
+  }
+  // 切换为异步执行模式
+  asynchronous_mode() {
+    this.execution_mode = action_mode.asynchronous;
   }
 
   /**
@@ -541,6 +1076,8 @@ export class Tank {
       this.cannon.distance = 0;
       this.cannon.x = 0;
       this.cannon.y = 0;
+      this.cannon.launch_x = this.tank.x;
+      this.cannon.launch_y = this.tank.y;
       this.cannon.thread = setInterval(() => {
         return this.cannon_move();
       }, 25);
@@ -564,7 +1101,13 @@ export class Tank {
     this.cannon.y += y_move;
     // console.log("x_move,y_move :>> ", x_move, y_move);
 
-    //TODO 碰撞检测
+    // 超过屏幕范围清空线程
+    if (
+      this.cannon.x > window.game_canvas.width ||
+      this.cannon.y > window.game_canvas.height
+    ) {
+      clearInterval(this.cannon.thread);
+    }
 
     for (let [key, value] of window.tank_position) {
       // 排除自己的位置
@@ -572,53 +1115,75 @@ export class Tank {
 
       // 炮弹坐标
 
-      const real_cannon_x = this.cannon.x + this.tank.x;
-      const real_cannon_y = this.cannon.y + this.tank.y;
+      const origin_cannon_x = this.cannon.launch_x;
+      const origin_cannon_y = this.cannon.launch_y;
+      const current_cannon_x = this.cannon.x + this.tank.x;
+      const current_cannon_y = this.cannon.y + this.tank.y;
+
+      // console.log("object :>> ", origin_cannon_x, origin_cannon_y);
+      // console.log("object :>> ", current_cannon_x, current_cannon_y);
 
       let [x, y] = this.format_position(
         value[0],
         value[1],
-        real_cannon_x,
-        real_cannon_y
+        origin_cannon_x,
+        origin_cannon_y
       );
 
-      if (x > 100 || y > 100) continue; // 若炮弹距离太远就之间跳过
+      // 若炮弹距离太远就之间跳过
+      // if (Math.abs(x) > 50 || Math.abs(y) > 50) continue;
+
+      // console.log("敌方坦克位置 :>> ", x, y);
 
       const [left_x, left_y, right_x, right_y] = this.get_tank_collision_volume(
         x,
         y
       );
 
-      const real_left_x = left_x + real_cannon_x;
-      const real_left_y = real_cannon_y - left_y;
-      const real_right_x = right_x + real_cannon_x;
-      const real_right_y = real_cannon_y - right_y;
+      const real_left_x = left_x + origin_cannon_x;
+      const real_left_y = origin_cannon_y - left_y;
+      const real_right_x = right_x + origin_cannon_x;
+      const real_right_y = origin_cannon_y - right_y;
 
       window.game_canvas.vision_position(real_left_x, real_left_y, "red");
       window.game_canvas.vision_position(real_right_x, real_right_y, "gold");
-      window.game_canvas.vision_position(real_cannon_x, real_cannon_y, "black");
+      window.game_canvas.vision_position(
+        origin_cannon_x,
+        origin_cannon_y,
+        "black"
+      );
 
       // console.log(
-      //   `炮弹(${real_cannon_x},${real_cannon_y}) \n
+      //   `炮弹(${origin_cannon_x},${origin_cannon_y}) \n
       //   左侧(${real_left_x},${real_left_y})
       //   \n右侧(${real_right_x},${real_right_y})`
       // );
 
       if (
         this.check_area_point(
-          real_cannon_x,
-          real_cannon_y,
+          current_cannon_x,
+          current_cannon_y,
           real_left_x,
           real_left_y,
           real_right_x,
           real_right_y
         )
       ) {
-        //TODO 集中目标触发爆炸动画 & 取消绘制线程
+        //TODO 击中目标触发爆炸动画 & 取消绘制线程
         alert(this.tank.color + " 击中！=> " + key);
       }
       // alert(left_x, left_y, right_x, right_y);
     }
+  }
+
+  /**
+   * @function: death
+   * @description: 坦克被摧毁
+   * @return {*}
+   * @author: Banana
+   */
+  death() {
+    //TODO 被摧毁效果
   }
 
   /**
@@ -717,11 +1282,37 @@ export class Tank {
     area_right_x,
     area_right_y
   ) {
-    if (area_left_x > check_x || check_x > area_right_x) return false;
+    // if (area_left_x > check_x || check_x > area_right_x) return false;
 
-    const max_y = Math.max(area_left_y, area_right_y);
-    const min_y = Math.min(area_left_y, area_right_y);
-    if (min_y <= check_y && check_y <= max_y) return true;
-    else return false;
+    // const max_y = Math.max(area_left_y, area_right_y);
+    // const min_y = Math.min(area_left_y, area_right_y);
+    // if (min_y <= check_y && check_y <= max_y) return true;
+    // else return false;
+    const offset_distance = window.game_canvas.average_length_width / 2;
+
+    // 检查左右区间的位置情况，判断击中检测是以x还是y + offset_distance
+    if (
+      Math.abs(area_left_x - area_right_x) >
+      Math.abs(area_left_y - area_right_y)
+    ) {
+      if (
+        Math.min(area_left_x, area_right_x) <= check_x &&
+        check_x <= Math.max(area_left_x, area_right_x) &&
+        Math.min(area_left_y, area_right_y) <= check_y &&
+        check_y <= Math.min(area_left_y, area_right_y) + offset_distance
+      ) {
+        return true;
+      }
+    } else {
+      if (
+        Math.min(area_left_y, area_right_y) <= check_y &&
+        check_y <= Math.max(area_left_y, area_right_y) &&
+        Math.min(area_left_x, area_right_x) <= check_x &&
+        check_x <= Math.min(area_left_x, area_right_x) + offset_distance
+      ) {
+        return true;
+      }
+    }
+    return false;
   }
 }

@@ -27,11 +27,45 @@ export const classify_radian = (input_radian) => {
   // 超出360度的范围转化为超出的部分 Eg. 370 => 10
   input_radian =
     Math.abs(input_radian) >= angle(360)
-      ? Math.abs(input_radian) - angle(360)
+      ? input_radian >= 0
+        ? numMinus(input_radian, angle(360))
+        : numAdd(input_radian, angle(360))
       : input_radian;
 
   // 将负角度转化为正角度计算
-  if (input_radian <= 0) input_radian = angle(360) + input_radian;
+  if (input_radian < 0) input_radian = numAdd(input_radian, angle(360));
 
   return input_radian;
 };
+
+export function numAdd(num1, num2) {
+  let baseNum, baseNum1, baseNum2;
+  try {
+    baseNum1 = String(num1).split(".")[1].length;
+  } catch (e) {
+    baseNum1 = 0;
+  }
+  try {
+    baseNum2 = String(num2).split(".")[1].length;
+  } catch (e) {
+    baseNum2 = 0;
+  }
+  baseNum = Math.pow(10, Math.max(baseNum1, baseNum2));
+  return (num1 * baseNum + num2 * baseNum) / baseNum;
+}
+
+export function numMinus(num1, num2) {
+  let baseNum, baseNum1, baseNum2;
+  try {
+    baseNum1 = String(num1).split(".")[1].length;
+  } catch (e) {
+    baseNum1 = 0;
+  }
+  try {
+    baseNum2 = String(num2).split(".")[1].length;
+  } catch (e) {
+    baseNum2 = 0;
+  }
+  baseNum = Math.pow(10, Math.max(baseNum1, baseNum2));
+  return (num1 * baseNum - num2 * baseNum) / baseNum;
+}

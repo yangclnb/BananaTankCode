@@ -25,27 +25,57 @@ function init() {
     window.game_canvas.square_height
   );
 
-  // tank_list.push(new Tank(300, 220, 180, 160, 160, "red", 0, false));
-  // tank_list[0].tank.action = 0;
-  // tank_list[0].cannon.rotate_state = false;
+  tank_list.push(new Tank(100, 300, 180, 270, 270, "blue", 0, false));
+  tank_list[0].run.operation = function () {
+    // console.log('this.action_queue :>> ', this);
 
-  tank_list.push(new UserTank(200, 220, 0, 0, 0, "blue", 0, false));
-  tank_list[0].run = function () {
-    tank_list[0].fire();
-    tank_list[0].ahead(200);
-    tank_list[0].tank_turn(45);
-    tank_list[0].ahead(200);
-    tank_list[0].tank_turn(-45);
-    tank_list[0].back(100);
-    tank_list[0].tank_turn(90);
-    tank_list[0].ahead(20);
-    tank_list[0].tank_turn(-180);
-    tank_list[0].ahead(200);
-    tank_list[0].cannon_turn(-90);
-    tank_list[0].radar_turn(90);
-    tank_list[0].fire();
-    
+    // 检测敌人 -----------------
+    // this.radar_turn(300);
+    // this.ahead(200);
+
+    // 检测行动 -----------------
+    this.say("我先开一炮");
+    this.fire();
+    this.say("向前移动 200");
+    this.ahead(200);
+    this.say("向左转 45°");
+    this.tank_turn(45);
+    this.say("向前移动 200");
+    this.ahead(200);
+    this.say("向右转 45°");
+    this.tank_turn(-45);
+    this.say("向后移动 100");
+    this.back(100);
+    this.say("向左转 90°");
+    this.tank_turn(90);
+    this.say("向前移动 20");
+    this.ahead(20);
+    this.say("向右转 180°");
+    this.tank_turn(-180);
+    this.say("向前移动 200");
+    this.ahead(200);
+    this.say("炮口向右转 90°");
+    this.cannon_turn(-90);
+    this.say("雷达向右转 180°");
+    this.radar_turn(-180);
+    this.say("再来一炮");
+    this.fire();
+
+    // 方向测试 ----------------
+    // this.ahead(300);
   };
+
+  // 右上方
+  tank_list.push(new Tank(220, 110, 180, 160, 160, "red", 0, false));
+
+  // 右下方
+  tank_list.push(new Tank(300, 220, 180, 160, 160, "yellow", 0, false));
+
+  // 左上方
+  // tank_list.push(new Tank(100, 110, 180, 160, 160, "red", 0, false));
+
+  // 左下方
+  tank_list.push(new Tank(100, 210, 180, 160, 160, "green", 0, false));
 
   // tank_list.push(new Tank(300, 20, 170, 90, 0, "blue", 0, false));
   // tank_list[1].tank.action = 0;
@@ -56,7 +86,7 @@ function init() {
   // tank_list.push(new Tank(400, 120, 270, 0, 0, "yellow", 0, false));
 
   tank_list.forEach((tank_item) => {
-    tank_item.run();
+    tank_item.run.operation();
   });
 
   animate();

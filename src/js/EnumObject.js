@@ -42,5 +42,23 @@ export const action_mode = {
 
 // 事件及其优先级
 export const event_priority = {
-  general_events: 1,
+  run: 1,
+  run_callback: 5,
+  scannedRobot: 10,
+  // 撞到别的坦克
+  hitTank: 20,
+  // 撞墙
+  hitWall: 30,
 };
+
+// 事件的优先级一览：
+// scannedRobot:10
+// bulletMissed:60
+// bulletHit:50
+// hitWall:30
+// bulletHitBullet:50
+// hitByBullet:40
+// hitRobot:20
+// death:100
+// win:100
+// robotDeath:70
