@@ -31,38 +31,46 @@ function init() {
 
     // 检测敌人 -----------------
     // this.radar_turn(300);
-    // this.ahead(200);
+    this.back(400);
 
     // 检测行动 -----------------
-    this.say("我先开一炮");
-    this.fire();
-    this.say("向前移动 200");
-    this.ahead(200);
-    this.say("向左转 45°");
-    this.tank_turn(45);
-    this.say("向前移动 200");
-    this.ahead(200);
-    this.say("向右转 45°");
-    this.tank_turn(-45);
-    this.say("向后移动 100");
-    this.back(100);
-    this.say("向左转 90°");
-    this.tank_turn(90);
-    this.say("向前移动 20");
-    this.ahead(20);
-    this.say("向右转 180°");
-    this.tank_turn(-180);
-    this.say("向前移动 200");
-    this.ahead(200);
-    this.say("炮口向右转 90°");
-    this.cannon_turn(-90);
-    this.say("雷达向右转 180°");
-    this.radar_turn(-180);
-    this.say("再来一炮");
-    this.fire();
+    // this.say("我先开一炮");
+    // this.fire();
+    // this.say("向前移动 200");
+    // this.ahead(200);
+    // this.say("向左转 45°");
+    // this.tank_turn(45);
+    // this.say("向前移动 200");
+    // this.ahead(200);
+    // this.say("向右转 45°");
+    // this.tank_turn(-45);
+    // this.say("向后移动 100");
+    // this.back(100);
+    // this.say("向左转 90°");
+    // this.tank_turn(90);
+    // this.say("向前移动 20");
+    // this.ahead(20);
+    // this.say("向右转 180°");
+    // this.tank_turn(-180);
+    // this.say("向前移动 200");
+    // this.ahead(200);
+    // this.say("炮口向右转 90°");
+    // this.cannon_turn(-90);
+    // this.say("雷达向右转 180°");
+    // this.radar_turn(-180);
+    // this.say("再来一炮");
+    // this.fire();
 
     // 方向测试 ----------------
     // this.ahead(300);
+
+    // 动作循环 ----------------
+    this.loop = function(){
+      this.tank_turn(-90);
+      this.ahead(100);
+    }
+    // 还是需要执行的
+    this.loop();
   };
 
   // 右上方

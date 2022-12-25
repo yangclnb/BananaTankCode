@@ -577,6 +577,11 @@ export class Tank {
   run = {
     // 正常运行时操作
     operation() {},
+
+    // 重复循环执行函数
+    loop: function(){
+      // 重复执行的动作
+    },
     // 说垃圾话
     say: (text) => {
       this.organize_queue({
@@ -934,9 +939,6 @@ export class Tank {
     },
   };
 
-  // 重复循环执行函数
-  loop() {}
-
   // 检测当前行为执行的情况 (从行为队列中检测该优先级的行为是否还存在)
   current_behavior_execution(priority) {
     return this.action_queue.find((item) => item.priority === priority);
@@ -974,7 +976,7 @@ export class Tank {
     if (this.action_queue.length === 0) return;
     let operation = this.action_queue[0];
     let current_index = 0;
-    console.log("this.action_queues :>> ", JSON.stringify(this.action_queue));
+    // console.log("this.action_queues :>> ", JSON.stringify(this.action_queue));
 
     // 检测当前行为的执行状态，若为false跳转到下一个
     while (
@@ -992,6 +994,7 @@ export class Tank {
       this.action_queue.splice(current_index, 1);
       // this.action_queue.shift();
       // TODO 将回调函数的内容置于队首
+      this.run.loop();
       return this.implement_current_operation();
     }
 
