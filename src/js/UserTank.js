@@ -124,13 +124,4 @@ export class UserTank extends Tank {
       eval("this." + operation_obejct).turn_direction = tank_turn.left;
     else eval("this." + operation_obejct).turn_direction = tank_turn.right;
   }
-
-  // 切换为同步执行模式
-  synchronous_mode() {
-    this.execution_mode = action_mode.synchronous;
-  }
-  // 切换为异步执行模式
-  asynchronous_mode() {
-    this.execution_mode = action_mode.asynchronous;
-  }
 }

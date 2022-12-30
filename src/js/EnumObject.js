@@ -49,6 +49,8 @@ export const event_priority = {
   hitTank: 20,
   // 撞墙
   hitWall: 30,
+  // 被击中
+  hitByBullet:40,
 };
 
 // 事件的优先级一览：

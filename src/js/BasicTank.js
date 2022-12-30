@@ -39,6 +39,8 @@ export class Tank {
     this.tank = {
       x: x + 23,
       y: y + 20,
+      all_blood: 3,
+      current_blood: 3,
       color: map_faction_position[tank_color] ? tank_color : "red_tank",
       angle: angle(tank_angle),
       current_state: tank_state.normal, // 坦克状态
@@ -54,7 +56,7 @@ export class Tank {
       y: 0,
       launch_x: 0,
       launch_y: 0,
-      reload_time: 2000, // 装填所需时间 (毫秒)
+      reload_time: 1000, // 装填所需时间 (毫秒)
       distance: 0, // 初始化炮弹移动的距离
       cannonball_angle: 0, // 炮弹发射时的斜率
       angle: angle(cannon_angle), //炮管的指向角度
@@ -72,6 +74,7 @@ export class Tank {
       rotate_speed: angle(0.5), // 一帧雷达扫描0.5°
       turn_direction: tank_turn.left, // 下次雷达的转向
       largest_distance: window.game_canvas.square_width * 8, // 最远扫描距离
+      darw_radar: true,
     };
 
     this.current_show_text = "";
@@ -120,9 +123,24 @@ export class Tank {
     ctx.font = "15px serif"; // 设置文案大小和字体
     ctx.textAlign = "center";
     ctx.fillStyle = "black";
-    ctx.fillText(this.current_show_text, 0, -50);
-
+    ctx.lineCap = "round";
+    ctx.fillText(this.current_show_text, 0, -40);
     translate_stack("pop");
+
+    // 绘制血条 -------------------------
+    const blood =
+      (this.tank.current_blood / this.tank.all_blood) * square_width;
+    if (blood !== 0) {
+      translate_stack("push", [30, -17], (a, b) => {
+        ctx.translate(a, b);
+      });
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, blood);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "green";
+      ctx.stroke();
+      translate_stack("pop");
+    }
 
     // 坦克  ---------------------------
 
@@ -147,34 +165,36 @@ export class Tank {
 
     // 雷达 ---------------------------
 
-    translate_stack(
-      "push",
-      [angle(90) - this.radar.angle - angle(7.5)],
-      (a) => {
+    if (this.radar.darw_radar) {
+      translate_stack(
+        "push",
+        [angle(90) - this.radar.angle - angle(7.5)],
+        (a) => {
+          ctx.rotate(a);
+        }
+      );
+      var gradient = ctx.createLinearGradient(
+        0,
+        0,
+        this.radar.largest_distance,
+        10
+      );
+      gradient.addColorStop(0, "rgba(17,153,142,0.5)");
+      gradient.addColorStop(1, "rgba(53,125,195, 0)");
+      ctx.beginPath();
+      ctx.fillStyle = gradient;
+      ctx.moveTo(this.radar.largest_distance, 0);
+      ctx.lineTo(0, 0);
+      translate_stack("push", [angle(15)], (a) => {
         ctx.rotate(a);
-      }
-    );
-    var gradient = ctx.createLinearGradient(
-      0,
-      0,
-      this.radar.largest_distance,
-      10
-    );
-    gradient.addColorStop(0, "rgba(17,153,142,0.5)");
-    gradient.addColorStop(1, "rgba(53,125,195, 0)");
-    ctx.beginPath();
-    ctx.fillStyle = gradient;
-    ctx.moveTo(this.radar.largest_distance, 0);
-    ctx.lineTo(0, 0);
-    translate_stack("push", [angle(15)], (a) => {
-      ctx.rotate(a);
-    });
-    ctx.lineTo(this.radar.largest_distance, 0);
-    ctx.fill();
-    ctx.closePath();
+      });
+      ctx.lineTo(this.radar.largest_distance, 0);
+      ctx.fill();
+      ctx.closePath();
 
-    translate_stack("pop");
-    translate_stack("pop");
+      translate_stack("pop");
+      translate_stack("pop");
+    }
 
     // 炮弹 ---------------------
     translate_stack("push", [angle(90)], (a) => {
@@ -368,10 +388,11 @@ export class Tank {
   compute_quadrant(speed, currentAngle, direction) {
     const k = Math.tan(currentAngle);
 
-    let x = speed / k;
-    let y = speed * k;
 
-    // console.log(`${k} | ${x} | ${y} | ${radian(currentAngle)}`);
+    let y = speed * k;
+    let x = y / k;
+
+    console.log(`${k} | ${x} | ${y} | ${radian(currentAngle)}`);
 
     // 在tan 0时 可以把函数看作是y=0。则x趋近于∞，直接返回x轴的速率即可
     if (x == Infinity) [x, y] = [speed, 0];
@@ -385,12 +406,12 @@ export class Tank {
       if (currentAngle <= angle(90)) {
         y *= -1;
       } else if (currentAngle <= angle(180)) {
-        // x *= -1;
+        x *= -1;
         // y *= -1;
       } else if (currentAngle <= angle(270)) {
         x *= -1;
       } else if (currentAngle <= angle(360)) {
-        x *= -1;
+        // x *= -1;
         y *= -1;
       }
     }
@@ -513,7 +534,7 @@ export class Tank {
 
         const enemy_angle = this.get_angle_slope_position(current_k, x, y);
 
-        // 只有队列中不存在，发现敌人后而且尚未执行完毕的行为时，才再次添加该行为
+        // 只有队列中不存在，发现敌人后尚未执行完毕的行为时，才再次添加该行为
         const current_behaviour = this.current_behavior_execution(
           event_priority.scannedRobot
         );
@@ -526,15 +547,17 @@ export class Tank {
   }
 
   get_angle_slope_position(k, x, y) {
+    console.log("k,x,y :>> ", k, x, y);
     // 根据斜率计算敌方角度
-    const enemy_angle1 = (
-      (180 * classify_radian(Math.atan(k))) /
-      Math.PI
-    ).toFixed(2);
+    const enemy_angle1 = parseFloat(
+      ((180 * classify_radian(Math.atan(k))) / Math.PI).toFixed(2)
+    );
+    console.log("enemy_angle1 :>> ", enemy_angle1);
     let enemy_angle2;
 
     if (enemy_angle1 >= 180) enemy_angle2 = enemy_angle1 - 180;
-    else enemy_angle2 = 180 - enemy_angle1;
+    else enemy_angle2 = 180 + enemy_angle1;
+    console.log("enemy_angle1,enemy_angle2 :>> ", enemy_angle1, enemy_angle2);
 
     const quadrant = this.determine_quadrant_by_position(x, y);
     // console.log(`角度有 ${enemy_angle1} , ${enemy_angle2} 两种可能，由于敌方坦克处于${quadrant}象限`);
@@ -561,9 +584,8 @@ export class Tank {
     // this.action_queue.splice(action_index, 1);
   }
 
-  // 继续线程中的雷达扫描
+  // 继续线程中未完成的雷达扫描
   continual_scan() {
-    console.log("this.action_queue :>> ", this.action_queue);
     const action = this.action_queue.find(
       (item) =>
         item.function === "adjust_radar_direction" &&
@@ -579,7 +601,7 @@ export class Tank {
     operation() {},
 
     // 重复循环执行函数
-    loop: function(){
+    loop: function () {
       // 重复执行的动作
     },
     // 说垃圾话
@@ -664,13 +686,13 @@ export class Tank {
   on_scanned_robot = {
     // enemy_angle 敌人的角度
     operation(enemy_angle) {
-      console.log(
-        "敌人相对我的位置 :>> ",
-        this.get_cannnon_reload_timee(),
-        Date.now() - this.get_last_launch_time()
-      );
+      // console.log(
+      //   "炮弹装填所需时间，当前还需装填时间 :>> ",
+      //   this.get_cannnon_reload_time(),
+      //   Date.now() - this.get_last_launch_time()
+      // );
       if (
-        this.get_cannnon_reload_timee() <=
+        this.get_cannnon_reload_time() <=
         Date.now() - this.get_last_launch_time()
       ) {
         this.say("我发现你了~");
@@ -683,8 +705,6 @@ export class Tank {
           "this.action_queues :>> ",
           JSON.stringify(this.action_queue)
         );
-
-        console.log("angle :>> ", enemy_angle);
       }
       this.continual_scan();
     },
@@ -704,7 +724,7 @@ export class Tank {
     },
 
     // 获取炮弹装填事件
-    get_cannnon_reload_timee: () => {
+    get_cannnon_reload_time: () => {
       return this.cannon.reload_time;
     },
 
@@ -810,7 +830,7 @@ export class Tank {
     },
   };
 
-  //
+  // 撞墙触发
   on_hit_wall = {
     operation(hit_axis) {
       this.say("怎么撞墙了!");
@@ -833,7 +853,7 @@ export class Tank {
     },
 
     // 获取炮弹装填事件
-    get_cannnon_reload_timee: () => {
+    get_cannnon_reload_time: () => {
       return this.cannon.reload_time;
     },
 
@@ -933,6 +953,132 @@ export class Tank {
         function: "continual_scan",
         argu: 1,
         priority: event_priority.hitWall,
+        callback: null,
+      });
+      // this.action_queue[action_index].execute_state = true;
+    },
+  };
+
+  // 被击中触发
+  on_hit_by_bullet = {
+    operation() {
+      this.say("捏麻麻滴!");
+    },
+    get_current_cannon_angle: () => {
+      return radian(this.cannon.angle);
+    },
+
+    // 返回当前雷达的角度
+    get_current_radar_angle: () => {
+      return radian(this.radar.angle);
+    },
+
+    // 获取最近一次 炮弹 发射的事件
+    get_last_launch_time: () => {
+      return this.cannon.launch_time;
+    },
+
+    // 获取炮弹装填事件
+    get_cannnon_reload_time: () => {
+      return this.cannon.reload_time;
+    },
+
+    // 说垃圾话
+    say: (text) => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "show_text",
+        argu: 1,
+        text,
+        priority: event_priority.hitByBullet,
+        callback: null,
+      });
+    },
+
+    // 坦克前进（前进位置）
+    ahead: (move_distance, callback) => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "move",
+        argu: move_distance,
+        priority: event_priority.hitByBullet,
+        callback,
+      });
+    },
+
+    // 坦克后退
+    back: (move_distance, callback) => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "move",
+        argu: -move_distance,
+        priority: event_priority.hitByBullet,
+        callback,
+      });
+    },
+
+    // 坦克旋转 正值👈 | 负值👉
+    tank_turn: (turn_angle, callback) => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "adjust_tank_direction",
+        argu: turn_angle,
+        priority: event_priority.hitByBullet,
+        callback,
+      });
+    },
+
+    // 炮口旋转
+    cannon_turn: (turn_angle, callback) => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "adjust_cannon_direction",
+        argu: turn_angle,
+        priority: event_priority.hitByBullet,
+        callback,
+      });
+    },
+
+    // 雷达旋转
+    radar_turn: (turn_angle, callback) => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "adjust_radar_direction",
+        argu: turn_angle,
+        priority: event_priority.hitByBullet,
+        callback,
+      });
+    },
+
+    // 开火
+    fire: (callback) => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "launch_cannon",
+        argu: 1,
+        priority: event_priority.hitByBullet,
+        callback,
+      });
+    },
+    // 停止雷达扫描
+    stop_scan: () => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "stop_scan",
+        argu: 1,
+        priority: event_priority.hitByBullet,
+        callback: null,
+      });
+      // this.action_queue.splice(action_index, 1);
+    },
+
+    // 继续线程中的雷达扫描
+    continual_scan: () => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "continual_scan",
+        argu: 1,
+        priority: event_priority.hitByBullet,
         callback: null,
       });
       // this.action_queue[action_index].execute_state = true;
@@ -1110,6 +1256,7 @@ export class Tank {
       this.cannon.y > window.game_canvas.height
     ) {
       clearInterval(this.cannon.thread);
+      this.cannon.thread = null;
     }
 
     for (let [key, value] of window.tank_position) {
@@ -1173,10 +1320,41 @@ export class Tank {
         )
       ) {
         //TODO 击中目标触发爆炸动画 & 取消绘制线程
-        alert(this.tank.color + " 击中！=> " + key);
+        console.log(this.tank.color + " 击中！=> " + key);
+        this.hit_tank(key);
+        clearInterval(this.cannon.thread);
+        this.cannon.thread = null;
       }
       // alert(left_x, left_y, right_x, right_y);
     }
+  }
+
+  /**
+   * @function: hit_tank
+   * @description: 击中坦克
+   * @return {*}
+   * @author: Banana
+   */
+  hit_tank(tank_color) {
+    for (const tank_item of window.tank_list) {
+      if (tank_item.tank.color == tank_color) {
+        tank_item.get_hit();
+        return;
+      }
+    }
+  }
+
+  /**
+   * @function: get_hit
+   * @description: 坦克被击中
+   * @return {*}
+   * @author: Banana
+   */
+  get_hit() {
+    // TODO 无敌时间
+    this.on_hit_by_bullet.operation();
+    if (this.tank.current_blood > 1) this.tank.current_blood--;
+    else this.death();
   }
 
   /**
@@ -1187,6 +1365,23 @@ export class Tank {
    */
   death() {
     //TODO 被摧毁效果
+
+    this.tank.current_blood--;
+
+    // 从坦克队列中去除
+    let index = 0;
+    for (const tank_item of window.tank_list) {
+      if (tank_item.tank.color == this.tank.color) {
+        window.tank_list.splice(index, 1);
+        break;
+      }
+      index++;
+    }
+
+    console.log("window.tank_list :>> ", window.tank_list);
+
+    // 从位置信息中去除
+    window.tank_position.delete(this.tank.color);
   }
 
   /**
