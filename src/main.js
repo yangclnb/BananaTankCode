@@ -1,5 +1,5 @@
 import "./less/index.less";
-import { Canvas } from "./js/Canvas.js";
+import { Canvas } from "./js/canvas.js";
 import { Tank } from "./js/BasicTank.js";
 // import { UserTank } from "./js/UserTank";
 // import resource_img from "./img/tank.png";
