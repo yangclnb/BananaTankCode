@@ -5,8 +5,8 @@ import {
   tank_turn,
   action_mode,
   event_priority,
-} from "./EnumObject";
-import { angle, classify_radian, radian } from "./utils";
+} from "./EnumObject.js";
+import { angle, classify_radian, radian } from "./utils.js";
 
 export class Tank {
   action_queue = new Array(); // 行为队列

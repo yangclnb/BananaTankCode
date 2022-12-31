@@ -1,10 +1,10 @@
 import "./less/index.less";
-import { Canvas } from "./js/Canvas";
-import { Tank } from "./js/BasicTank";
-import { UserTank } from "./js/UserTank";
+import { Canvas } from "./js/Canvas.js";
+import { Tank } from "./js/BasicTank.js";
+// import { UserTank } from "./js/UserTank";
 // import resource_img from "./img/tank.png";
 import resource_img from "./img/tank_no_background.png";
-import { angle, classify_radian, radian } from "./js/utils";
+import { angle, classify_radian, radian } from "./js/utils.js";
 
 window.tank_img = new Image();
 window.tank_position = new Map();

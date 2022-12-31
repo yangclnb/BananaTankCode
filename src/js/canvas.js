@@ -1,4 +1,4 @@
-import { map_faction_position, map_color_scheme } from "./EnumObject";
+import { map_faction_position, map_color_scheme } from "./EnumObject.js";
 
 export class Canvas {
   constructor(canvasElement) {
