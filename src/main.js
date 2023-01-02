@@ -5,6 +5,7 @@ import { Tank } from "./js/BasicTank.js";
 // import resource_img from "./img/tank.png";
 import resource_img from "./img/tank_no_background.png";
 import { angle, classify_radian, radian } from "./js/utils.js";
+import { playBoom, playBoomList } from "./js/ControlGIF";
 
 window.tank_img = new Image();
 window.tank_position = new Map();
@@ -68,7 +69,6 @@ function init() {
     // this.cannon_turn(330);
     // this.fire();
 
-
     // 动作循环 ----------------
     this.loop = function () {
       this.tank_turn(180);
@@ -92,6 +92,8 @@ function init() {
     tank_item.run.operation();
   });
 
+  playBoom(200,100);
+
   animate();
 }
 
@@ -103,5 +105,7 @@ function animate() {
     tank_item.implement_current_operation();
     tank_item.draw();
   });
+
+  playBoomList();
   requestAnimationFrame(animate);
 }

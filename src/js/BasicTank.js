@@ -84,11 +84,6 @@ export class Tank {
     this.draw();
   }
 
-  injured() {
-    //TODO 挨炮后 血条移动
-    //TODO 血条清零 坦克消失
-  }
-
   /**
    * @function: draw
    * @description: 绘制坦克
