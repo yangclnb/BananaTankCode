@@ -26,7 +26,7 @@ function init() {
     window.game_canvas.square_height
   );
 
-  window.tank_list.push(new Tank(300, 100, 180, 0, 0, "blue", 0, false));
+  window.tank_list.push(new Tank(650, 0, 180, 0, 0, "blue", 0, false));
   window.tank_list[0].run.operation = function () {
     // console.log('this.action_queue :>> ', this);
 
@@ -71,8 +71,8 @@ function init() {
 
     // 动作循环 ----------------
     this.loop = function () {
-      this.tank_turn(180);
-      this.ahead(50);
+      this.tank_turn(30);
+      this.ahead(200);
       this.radar_turn(360);
     };
     // 还是需要执行的
@@ -80,19 +80,19 @@ function init() {
   };
 
   // 右上方
-  window.tank_list.push(new Tank(220, 110, 180, 160, 160, "red", 0, false));
+  window.tank_list.push(new Tank(0, 0, 180, 160, 160, "red", 0, false));
 
   // 右下方
   // window.tank_list.push(new Tank(300, 220, 180, 160, 160, "yellow", 0, false));
 
   // 左下方
-  window.tank_list.push(new Tank(100, 210, 180, 160, 160, "green", 0, false));
+  window.tank_list.push(new Tank(0, 300, 180, 160, 160, "green", 0, false));
 
   window.tank_list.forEach((tank_item) => {
     tank_item.run.operation();
   });
 
-  playBoom(200,100);
+  // playBoom(200,100);
 
   animate();
 }

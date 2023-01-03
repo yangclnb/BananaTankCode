@@ -45,11 +45,16 @@ export function playBoomList() {
     current_head.showNum--;
     ctx.drawImage(
       current_head.img,
-      item.x,
-      item.y,
+      0,
+      0,
+      320,
+      320,
+      item.x - square_width,
+      item.y - square_height,
+      square_width * 2,
+      square_height * 2
     );
 
-    console.log("我还在运行 :>> ");
     index++;
   }
 }

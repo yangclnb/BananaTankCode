@@ -1,3 +1,4 @@
+import { playBoom } from "./ControlGIF.js";
 import {
   map_faction_position,
   tank_action,
@@ -56,7 +57,7 @@ export class Tank {
       y: 0,
       launch_x: 0,
       launch_y: 0,
-      reload_time: 1000, // 装填所需时间 (毫秒)
+      reload_time: 3000, // 装填所需时间 (毫秒)
       distance: 0, // 初始化炮弹移动的距离
       cannonball_angle: 0, // 炮弹发射时的斜率
       angle: angle(cannon_angle), //炮管的指向角度
@@ -383,7 +384,6 @@ export class Tank {
   compute_quadrant(speed, currentAngle, direction) {
     const k = Math.tan(currentAngle);
 
-
     let y = speed * k;
     let x = y / k;
 
@@ -593,7 +593,16 @@ export class Tank {
   // 初始化运行
   run = {
     // 正常运行时操作
-    operation() {},
+    operation() {
+      // 动作循环 ----------------
+      this.loop = function () {
+        this.tank_turn(45);
+        this.ahead(200);
+        this.radar_turn(360);
+      };
+      // 还是需要执行的
+      this.loop();
+    },
 
     // 重复循环执行函数
     loop: function () {
@@ -1114,6 +1123,14 @@ export class Tank {
 
   // 执行当前队列的操作
   implement_current_operation() {
+    if (this.execution_mode === action_mode.synchronous)
+      this.synchronous_operation();
+    else if (this.execution_mode === action_mode.asynchronous)
+      this.asynchronous_operation();
+  }
+
+  // 执行同步操作
+  synchronous_operation() {
     if (this.action_queue.length === 0) return;
     let operation = this.action_queue[0];
     let current_index = 0;
@@ -1126,6 +1143,40 @@ export class Tank {
     ) {
       operation = this.action_queue[++current_index];
     }
+
+    this.operation_action(operation, current_index);
+  }
+
+  // 执行异步操作
+  // 行走 旋转 可以同时进行
+  asynchronous_operation() {
+    if (this.action_queue.length === 0) return;
+
+    let operation = this.action_queue[0];
+    let current_index = 0;
+    // console.log("this.action_queues :>> ", JSON.stringify(this.action_queue));
+
+    // 检测当前行为的执行状态，若为false跳转到下一个
+    while (
+      current_index < this.action_queue.length &&
+      operation.execute_state === false
+    ) {
+      operation = this.action_queue[++current_index];
+    }
+
+    for(const operation of this.action_queue){
+      if(operation.execute_state === false) continue;
+
+      
+
+      current_index++;
+    }
+
+    this.operation_action(operation, current_index);
+  }
+
+  // 执行当前的操作
+  operation_action(operation, current_index) {
     // 若当前队列除 执行状态false 的行为外不存在其他行为，直接脱出
     if (operation === undefined) return;
 
@@ -1333,6 +1384,8 @@ export class Tank {
   hit_tank(tank_color) {
     for (const tank_item of window.tank_list) {
       if (tank_item.tank.color == tank_color) {
+        // 触发爆炸动画
+        playBoom(tank_item.tank.x, tank_item.tank.y);
         tank_item.get_hit();
         return;
       }
