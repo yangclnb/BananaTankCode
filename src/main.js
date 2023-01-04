@@ -25,8 +25,9 @@ function init() {
     ", ",
     window.game_canvas.square_height
   );
-
-  window.tank_list.push(new Tank(650, 0, 180, 0, 0, "blue", 0, false));
+  // 650，0
+  window.tank_list.push(new Tank(300, 100, 180, 0, 0, "blue", 0, false));
+  window.tank_list[0].asynchronous_mode();
   window.tank_list[0].run.operation = function () {
     // console.log('this.action_queue :>> ', this);
 
@@ -69,10 +70,21 @@ function init() {
     // this.cannon_turn(330);
     // this.fire();
 
+    // 测试异步执行 -------------
+    // this.fire();
+    // this.tank_turn(360);
+    // this.radar_turn(360);
+    // this.ahead(500);
+    // this.say("到达终点");
+
+    // this.fire();
+
     // 动作循环 ----------------
     this.loop = function () {
+      // this.fire();
       this.tank_turn(30);
       this.ahead(200);
+      this.cannon_turn(360);
       this.radar_turn(360);
     };
     // 还是需要执行的

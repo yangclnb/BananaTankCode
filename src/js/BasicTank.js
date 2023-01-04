@@ -387,7 +387,7 @@ export class Tank {
     let y = speed * k;
     let x = y / k;
 
-    console.log(`${k} | ${x} | ${y} | ${radian(currentAngle)}`);
+    // console.log(`${k} | ${x} | ${y} | ${radian(currentAngle)}`);
 
     // 在tan 0时 可以把函数看作是y=0。则x趋近于∞，直接返回x轴的速率即可
     if (x == Infinity) [x, y] = [speed, 0];
@@ -1150,29 +1150,40 @@ export class Tank {
   // 执行异步操作
   // 行走 旋转 可以同时进行
   asynchronous_operation() {
-    if (this.action_queue.length === 0) return;
-
-    let operation = this.action_queue[0];
     let current_index = 0;
-    // console.log("this.action_queues :>> ", JSON.stringify(this.action_queue));
+    // 可以同步进行的操作
+    let record_operation = {
+      move: false,
+      adjust_tank_direction: false,
+      adjust_cannon_direction: false,
+      adjust_radar_direction: false,
+    };
+    console.log("this.action_queues :>> ", JSON.stringify(this.action_queue));
 
-    // 检测当前行为的执行状态，若为false跳转到下一个
-    while (
-      current_index < this.action_queue.length &&
-      operation.execute_state === false
-    ) {
-      operation = this.action_queue[++current_index];
-    }
+    for (const operation of this.action_queue) {
+      // alert(record_operation[operation.function]);
+      // 检测当前行为的执行状态，若为false跳转到下一个
+      if (operation.execute_state === false) {
+        current_index++;
+        continue;
+      }
 
-    for(const operation of this.action_queue){
-      if(operation.execute_state === false) continue;
-
-      
+      // 若队首为不可同步执行的动作，执行该动作并且退出函数
+      if (
+        current_index === 0 &&
+        record_operation[operation.function] === undefined
+      ) {
+        this.operation_action(operation, current_index);
+        return;
+      } else if (record_operation[operation.function] === false) {
+        this.operation_action(operation, current_index);
+        record_operation[operation.function] === true;
+      } else if (record_operation[operation.function] === undefined) {
+        return;
+      }
 
       current_index++;
     }
-
-    this.operation_action(operation, current_index);
   }
 
   // 执行当前的操作
@@ -1184,9 +1195,15 @@ export class Tank {
     if (Math.abs(operation.already_implemented) >= Math.abs(operation.argu)) {
       // console.log("当前行为的索引 :>> ", current_index);
       this.action_queue.splice(current_index, 1);
+
+      // ! 仅当当作为空 或 仅存才execute_state 为 false 的动作时才添加循环动作
+      if (this.action_queue.length === 0) {
+        this.run.loop();
+        return this.implement_current_operation();
+      }
+
       // this.action_queue.shift();
       // TODO 将回调函数的内容置于队首
-      this.run.loop();
       return this.implement_current_operation();
     }
 
