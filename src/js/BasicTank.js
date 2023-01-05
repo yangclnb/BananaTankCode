@@ -619,6 +619,7 @@ export class Tank {
         callback: null,
       });
     },
+
     // 坦克前进（前进位置）
     ahead: (move_distance, callback) => {
       this.organize_queue({
@@ -684,10 +685,31 @@ export class Tank {
         callback,
       });
     },
+    // 调整为同步模式
+    synchronous_mode: () => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "synchronous",
+        argu: 1,
+        priority: event_priority.run,
+        callback: null,
+      });
+    },
+    // 调整为异步模式
+    asynchronous_mode: () => {
+      this.organize_queue({
+        already_implemented: 0,
+        function: "asynchronous",
+        argu: 1,
+        priority: event_priority.run,
+        callback: null,
+      });
+    },
   };
 
   // 发现敌人时调用
   on_scanned_robot = {
+    //! 水平方向发现敌人 炮弹射反了
     // enemy_angle 敌人的角度
     operation(enemy_angle) {
       // console.log(
@@ -1158,10 +1180,15 @@ export class Tank {
       adjust_cannon_direction: false,
       adjust_radar_direction: false,
     };
-    console.log("this.action_queues :>> ", JSON.stringify(this.action_queue));
+    // 只执行和当前队首优先级相同的动作
+    let execute_priority = 1;
+
+    // console.log("this.action_queues :>> ", JSON.stringify(this.action_queue));
 
     for (const operation of this.action_queue) {
-      // alert(record_operation[operation.function]);
+      // 确定队首优先级
+      if (current_index === 0) execute_priority = operation.priority;
+
       // 检测当前行为的执行状态，若为false跳转到下一个
       if (operation.execute_state === false) {
         current_index++;
@@ -1175,9 +1202,12 @@ export class Tank {
       ) {
         this.operation_action(operation, current_index);
         return;
-      } else if (record_operation[operation.function] === false) {
+      } else if (
+        record_operation[operation.function] === false &&
+        execute_priority === operation.priority
+      ) {
         this.operation_action(operation, current_index);
-        record_operation[operation.function] === true;
+        record_operation[operation.function] = true;
       } else if (record_operation[operation.function] === undefined) {
         return;
       }
@@ -1196,7 +1226,7 @@ export class Tank {
       // console.log("当前行为的索引 :>> ", current_index);
       this.action_queue.splice(current_index, 1);
 
-      // ! 仅当当作为空 或 仅存才execute_state 为 false 的动作时才添加循环动作
+      // 仅当当作为空 或 仅存才execute_state 为 false 的动作时才添加循环动作
       if (this.action_queue.length === 0) {
         this.run.loop();
         return this.implement_current_operation();
@@ -1229,6 +1259,12 @@ export class Tank {
       operation.already_implemented += 1;
     } else if (operation.function === "show_text") {
       this.show_text(operation.text);
+      operation.already_implemented += 1;
+    } else if (operation.function === "synchronous") {
+      this.synchronous_mode();
+      operation.already_implemented += 1;
+    } else if (operation.function === "asynchronous") {
+      this.asynchronous_mode();
       operation.already_implemented += 1;
     }
   }

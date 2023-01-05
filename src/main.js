@@ -9,12 +9,18 @@ import { playBoom, playBoomList } from "./js/ControlGIF";
 
 window.tank_img = new Image();
 window.tank_position = new Map();
+window.play_animate = true;
 tank_img.src = resource_img;
 window.tank_list = [];
 window.onload = () => {
   init();
 };
 
+/**
+ * @function: init
+ * @description: 全局初始化
+ * @author: Banana
+ */
 function init() {
   let canvasElement = document.querySelector("#main_canvas");
   window.game_canvas = new Canvas(canvasElement);
@@ -25,11 +31,26 @@ function init() {
     ", ",
     window.game_canvas.square_height
   );
+  init_tank();
+
+  animate();
+}
+
+/**
+ * @function: init_tank
+ * @description: 初始化坦克
+ * @author: Banana
+ */
+function init_tank() {
+  window.tank_list = [];
   // 650，0
-  window.tank_list.push(new Tank(300, 100, 180, 0, 0, "blue", 0, false));
-  window.tank_list[0].asynchronous_mode();
+  window.tank_list.push(new Tank(600, 300, 180, 180, 10, "blue", 0, false));
   window.tank_list[0].run.operation = function () {
     // console.log('this.action_queue :>> ', this);
+
+    // 调整为异步执行模式
+    this.asynchronous_mode();
+    this.say("我是异步运动的~");
 
     // 检测敌人 -----------------
     // this.radar_turn(-300);
@@ -77,11 +98,8 @@ function init() {
     // this.ahead(500);
     // this.say("到达终点");
 
-    // this.fire();
-
     // 动作循环 ----------------
     this.loop = function () {
-      // this.fire();
       this.tank_turn(30);
       this.ahead(200);
       this.cannon_turn(360);
@@ -91,11 +109,17 @@ function init() {
     this.loop();
   };
 
+  window.tank_list[0].on_hit_wall.operation = function () {
+    this.say("撞墙啦");
+    this.tank_turn(45);
+    this.back(20);
+  };
+
   // 右上方
   window.tank_list.push(new Tank(0, 0, 180, 160, 160, "red", 0, false));
 
   // 右下方
-  // window.tank_list.push(new Tank(300, 220, 180, 160, 160, "yellow", 0, false));
+  window.tank_list.push(new Tank(300, 300, 180, 160, 160, "yellow", 0, false));
 
   // 左下方
   window.tank_list.push(new Tank(0, 300, 180, 160, 160, "green", 0, false));
@@ -103,21 +127,36 @@ function init() {
   window.tank_list.forEach((tank_item) => {
     tank_item.run.operation();
   });
-
-  // playBoom(200,100);
-
-  animate();
 }
 
+/**
+ * @function: animate
+ * @description: 开启动画
+ * @author: Banana
+ */
 function animate() {
-  window.game_canvas.init();
-  // console.log('window.tank_position :>> ', window.tank_position);
-  window.tank_list.forEach((tank_item) => {
-    // console.log('object :>> ', tank_item.tank_action);
-    tank_item.implement_current_operation();
-    tank_item.draw();
-  });
+  if (window.play_animate) {
+    window.game_canvas.init();
+    // console.log('window.tank_position :>> ', window.tank_position);
+    window.tank_list.forEach((tank_item) => {
+      // console.log('object :>> ', tank_item.tank_action);
+      tank_item.implement_current_operation();
+      tank_item.draw();
+    });
+    playBoomList();
+  }
 
-  playBoomList();
   requestAnimationFrame(animate);
 }
+
+document.querySelector("#start").onclick = () => {
+  window.play_animate = true;
+};
+
+document.querySelector("#stop").onclick = () => {
+  window.play_animate = false;
+};
+
+document.querySelector("#restart").onclick = () => {
+  init_tank();
+};
