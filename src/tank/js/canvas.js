@@ -8,8 +8,8 @@ export class Canvas {
     this.ctx = ctx;
     this.width = this.canvas.width;
     this.height = this.canvas.height;
-    this.minimum_x = 20;
-    this.minimum_y = 12;
+    this.minimum_x = 25;
+    this.minimum_y = 15;
     this.square_width = this.canvas.width / this.minimum_x;
     this.square_height = this.canvas.height / this.minimum_y;
     this.average_length_width = (this.square_width + this.square_height) / 2;

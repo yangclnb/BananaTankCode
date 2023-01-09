@@ -1,0 +1,32 @@
+:root{
+  --theme-red-color:#D91139;
+  --theme-yellow-color:#FFCF00;
+  --theme-green-color:#52A652;
+  --theme-main-font:#D8DFEA;
+  --theme-second-font:#34465B;
+  --theme-main-background:#111927;
+  --theme-second-background:#1D2839;
+}
+
+*{
+  padding: 0;
+  margin: 0;
+}
+
+#app {
+  font-weight: normal;
+  background-color:var(--theme-main-background);
+  color: var(--theme-main-font);
+  font-size: 12px;
+}
+
+a,
+.green {
+  text-decoration: none;
+  color: hsla(160, 100%, 37%, 1);
+  transition: 0.4s;
+}
+
+.el-dropdown-menu{
+  background-color: var(--theme-second-background);
+}
