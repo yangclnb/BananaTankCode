@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
 import aboutView from "../views/AboutView.vue";
-import FeedbackView from "../Views/FeedbackView.vue";
+import FeedbackView from "../views/FeedbackView.vue";
 import HelpView from "../views/HelpView.vue";
 import RankView from "../views/RankView.vue";
 
