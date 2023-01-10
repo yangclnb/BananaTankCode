@@ -3,13 +3,13 @@ import headVue from "../components/head.vue";
 </script>
 
 <template>
-  <div id="about">
+  <div id="help">
     <headVue />
   </div>
 </template>
 
 <style lang="less" scoped>
-#about {
+#help {
   width: 100%;
   display: flex;
   flex-direction: column;

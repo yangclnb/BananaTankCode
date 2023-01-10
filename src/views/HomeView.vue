@@ -7,14 +7,29 @@ import {
   ElDropdownItem,
 } from "element-plus";
 import { Setting, Platform, Timer } from "@element-plus/icons-vue";
-import { startAnimate, stopAnimate, restart } from "@/tank/main.js";
+import {
+  init_canvas,
+  startAnimate,
+  stopAnimate,
+  restart,
+} from "@/tank/main.js";
+import { onMounted, onUnmounted, ref } from "vue";
 
-let currentAnimateState = "暂停";
+let currentAnimateState = ref("暂停");
 const startAndStop = () => {
   window.play_animate ? stopAnimate() : startAnimate();
-  currentAnimateState = window.play_animate ? "暂停" : "开始";
+  currentAnimateState.value = window.play_animate ? "暂停" : "开始";
   console.log("currentAnimateState :>> ", currentAnimateState);
 };
+
+onMounted(() => {
+  startAnimate();
+  init_canvas();
+});
+
+onUnmounted(() => {
+  stopAnimate();
+});
 </script>
 
 <template>

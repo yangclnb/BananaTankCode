@@ -21,18 +21,20 @@ window.onload = () => {
  * @author: Banana
  */
 export function init() {
+  init_canvas();
+  init_tank();
+  animate();
+}
+
+export function init_canvas() {
   let canvasElement = document.querySelector("#main_canvas");
   window.game_canvas = new Canvas(canvasElement);
-
   console.log(
     "单格大小 :>> ",
     window.game_canvas.square_width,
     ", ",
     window.game_canvas.square_height
   );
-  init_tank();
-
-  animate();
 }
 
 /**
