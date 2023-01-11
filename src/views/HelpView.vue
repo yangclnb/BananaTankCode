@@ -1,5 +1,5 @@
 <script setup>
-import headVue from "../components/head.vue";
+import headVue from "../components/Head.vue";
 </script>
 
 <template>

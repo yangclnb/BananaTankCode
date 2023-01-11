@@ -1,5 +1,5 @@
 <script setup>
-import headVue from "../components/head.vue";
+import headVue from "../components/Head.vue";
 import {
   ElDropdown,
   ElButton,
@@ -14,6 +14,9 @@ import {
   restart,
 } from "@/tank/main.js";
 import { onMounted, onUnmounted, ref } from "vue";
+import Editor from "../components/Editor.vue";
+import { useConsoleDisplayStore } from "@/stores/consoleStatus";
+import { storeToRefs } from "pinia";
 
 let currentAnimateState = ref("暂停");
 const startAndStop = () => {
@@ -30,6 +33,13 @@ onMounted(() => {
 onUnmounted(() => {
   stopAnimate();
 });
+
+// 控制控制台出现
+
+const store = useConsoleDisplayStore();
+function showConsole() {
+  store.show();
+}
 </script>
 
 <template>
@@ -56,7 +66,10 @@ onUnmounted(() => {
         </div>
 
         <div id="right_tools">
-          <el-button :icon="Platform" color="var(--theme-green-color)"
+          <el-button
+            @click="showConsole"
+            :icon="Platform"
+            color="var(--theme-green-color)"
             >控制台</el-button
           >
           <el-button
@@ -74,6 +87,7 @@ onUnmounted(() => {
         >
       </div>
     </div>
+    <Editor />
   </div>
 </template>
 

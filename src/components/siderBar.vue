@@ -58,6 +58,9 @@ nav {
   display: flex;
   flex-direction: column;
 
+  position: sticky;
+  top: 0;
+
   #top_part {
     /* border: 1px solid red; */
     height: 80vh;
@@ -113,7 +116,7 @@ nav {
         background-color: var(--theme-red-color);
         position: relative;
         top: 5px;
-        left: 14px;
+        left: 13px;
         filter: blur(8px);
       }
     }
