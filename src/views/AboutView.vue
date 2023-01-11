@@ -1,10 +1,10 @@
 <script setup>
-import headVue from "../components/Head.vue";
+import HeadPart from "../components/HeadPart.vue";
 </script>
 
 <template>
   <div id="about">
-    <headVue />
+    <HeadPart />
   </div>
 </template>
 
