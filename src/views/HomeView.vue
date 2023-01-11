@@ -1,4 +1,5 @@
 <script setup>
+import Editor from "../components/Editor.vue";
 import headVue from "../components/Head.vue";
 import {
   ElDropdown,
@@ -14,9 +15,7 @@ import {
   restart,
 } from "@/tank/main.js";
 import { onMounted, onUnmounted, ref } from "vue";
-import Editor from "../components/Editor.vue";
 import { useConsoleDisplayStore } from "@/stores/consoleStatus";
-import { storeToRefs } from "pinia";
 
 let currentAnimateState = ref("暂停");
 const startAndStop = () => {
