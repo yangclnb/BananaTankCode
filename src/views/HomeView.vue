@@ -1,6 +1,6 @@
 <script setup>
 import Editor from "../components/Editor.vue";
-import Head from "../components/Head.vue";
+// import Head from "../components/Head.vue";
 import {
   ElDropdown,
   ElButton,
@@ -43,7 +43,7 @@ function showConsole() {
 
 <template>
   <div id="home_page">
-    <Head />
+    <!-- <Head /> -->
     <div id="game_box">
       <div id="tools_bar">
         <div id="left_tools">
