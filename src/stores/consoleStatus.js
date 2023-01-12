@@ -1,7 +1,7 @@
 import { ref } from "vue";
 import { defineStore } from "pinia";
 
-export const useConsoleDisplayStore = defineStore("display", () => {
+export const useConsoleDisplayStore = defineStore("consoleDisplay", () => {
   const state = ref(false);
 
   function show() {

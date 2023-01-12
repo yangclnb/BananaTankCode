@@ -4,6 +4,8 @@ import { vDrag } from "@/tank/js/utils/drag.js";
 import { onMounted, reactive, ref } from "vue";
 import { useConsoleDisplayStore } from "@/stores/consoleStatus";
 import { storeToRefs } from "pinia";
+import { useTankStatusStore } from "../stores/tankStatus";
+import { UserTank } from "@/tank/js/tank/UserTank.js";
 
 const store = useConsoleDisplayStore();
 const { state } = storeToRefs(store);
@@ -19,78 +21,98 @@ let options = reactive({
   autoClosingBrackets: true,
 });
 
-let defaultValue = ref(`window.tank_list = [];
-  // 650，0
-  window.tank_list.push(new Tank(600, 300, 180, 180, 10, "blue", 0, false));
-  window.tank_list[0].run.operation = function () {
-    // console.log('this.action_queue :>> ', this);
+let defaultValue = ref(`// 运行时触发
+const run = function () {
+  // 调整为异步执行模式
+  // this.asynchronous_mode();
+  // this.say("我是异步运动的~");
 
-    // 调整为异步执行模式
-    this.asynchronous_mode();
-    this.say("我是异步运动的~");
+  // 检测敌人 -----------------
+  // this.radar_turn(-300);
+  // this.back(400);
 
-    // 检测敌人 -----------------
-    // this.radar_turn(-300);
-    // this.back(400);
+  // 检测行动 -----------------
+  // this.say("我先开一炮");
+  // this.fire();
+  // this.say("向前移动 200");
+  // this.ahead(200);
+  // this.say("向左转 45°");
+  // this.tank_turn(45);
+  // this.say("向前移动 200");
+  // this.ahead(200);
+  // this.say("向右转 45°");
+  // this.tank_turn(-45);
+  // this.say("向后移动 100");
+  // this.back(100);
+  // this.say("向左转 90°");
+  // this.tank_turn(90);
+  // this.say("向前移动 20");
+  // this.ahead(20);
+  // this.say("向右转 180°");
+  // this.tank_turn(-180);
+  // this.say("向前移动 200");
+  // this.ahead(200);
+  // this.say("炮口向右转 90°");
+  // this.cannon_turn(-90);
+  // this.say("雷达向右转 180°");
+  // this.radar_turn(-180);
+  // this.say("再来一炮");
+  // this.fire();
 
-    // 检测行动 -----------------
-    // this.say("我先开一炮");
-    // this.fire();
-    // this.say("向前移动 200");
-    // this.ahead(200);
-    // this.say("向左转 45°");
-    // this.tank_turn(45);
-    // this.say("向前移动 200");
-    // this.ahead(200);
-    // this.say("向右转 45°");
-    // this.tank_turn(-45);
-    // this.say("向后移动 100");
-    // this.back(100);
-    // this.say("向左转 90°");
-    // this.tank_turn(90);
-    // this.say("向前移动 20");
-    // this.ahead(20);
-    // this.say("向右转 180°");
-    // this.tank_turn(-180);
-    // this.say("向前移动 200");
-    // this.ahead(200);
-    // this.say("炮口向右转 90°");
-    // this.cannon_turn(-90);
-    // this.say("雷达向右转 180°");
-    // this.radar_turn(-180);
-    // this.say("再来一炮");
-    // this.fire();
+  // 方向测试 ----------------
+  // this.ahead(300);
 
-    // 方向测试 ----------------
-    // this.ahead(300);
+  // 调试弹道 ----------------
+  // this.cannon_turn(330);
+  // this.fire();
 
-    // 调试弹道 ----------------
-    // this.cannon_turn(330);
-    // this.fire();
+  // 测试异步执行 -------------
+  // this.fire();
+  // this.tank_turn(360);
+  // this.radar_turn(360);
+  // this.ahead(500);
+  // this.say("到达终点");
 
-    // 测试异步执行 -------------
-    // this.fire();
-    // this.tank_turn(360);
-    // this.radar_turn(360);
-    // this.ahead(500);
-    // this.say("到达终点");
+  // 动作循环 ----------------
+  // this.loop = function () {
+  //   this.tank_turn(30);
+  //   this.ahead(200);
+  //   this.cannon_turn(360);
+  //   this.radar_turn(360);
+  // };
+  // 还是需要执行的
+  // this.loop();
+};
 
-    // 动作循环 ----------------
-    this.loop = function () {
-      this.tank_turn(30);
-      this.ahead(200);
-      this.cannon_turn(360);
-      this.radar_turn(360);
-    };
-    // 还是需要执行的
-    this.loop();
-  };
+// 发现敌人时触发
+const scannedRobot = function(){
+  
+}
 
-  window.tank_list[0].on_hit_wall.operation = function () {
-    this.say("撞墙啦");
-    this.tank_turn(45);
-    this.back(20);
-  };
+// 撞墙时触发
+const hitWall = function(){
+
+}
+
+// 被击中时触发
+const hitByBullet = function(){
+  
+}
+
+// 初始化配置
+const options = {
+  color: "red", //坦克颜色
+  initDirection: 270, // 坦克初始朝向，输入角度
+  initPosition: 1, //初始位置，按照象限划分
+};
+
+UserTank.create(
+    options,
+    run,
+    scannedRobot,
+    hitWall,
+    hitByBullet
+  );
 `);
 
 // 隐藏控制台
@@ -98,9 +120,18 @@ function closeConsole() {
   store.hidde();
 }
 
+const gameMode = useTankStatusStore();
+const { mode } = storeToRefs(gameMode);
+
 // 输入改变时调用
 function onChange(value) {
-  console.log(value);
+  // console.log(value);
+
+  // 判断当前游戏模式
+  if (mode.value === "console") {
+    UserTank.executeUserCode(value);
+    console.log("window.tank_list :>> ", window.tank_list);
+  }
 }
 
 onMounted(() => {

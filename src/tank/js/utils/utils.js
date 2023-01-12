@@ -5,7 +5,10 @@
  * @return {Number} 转化后得弧度
  * @author: Banana
  */
-export const angle = (input_angle) => (Math.PI / 180) * input_angle;
+export const angle = (input_angle) => {
+  input_angle = input_angle === 0 ? 360 : input_angle;
+  return (Math.PI / 180) * input_angle;
+};
 
 /**
  * @function: radian
@@ -68,4 +71,29 @@ export function numMinus(num1, num2) {
   }
   baseNum = Math.pow(10, Math.max(baseNum1, baseNum2));
   return (num1 * baseNum - num2 * baseNum) / baseNum;
+}
+
+/**
+ * @function: getQuadrantCorner
+ * @description: 输入象限，根据canvas大小输出该象限的顶点位置
+ * @param {*} quadrant
+ * @return {*}
+ * @author: Banana
+ */
+export function getQuadrantCorner(quadrant) {
+  const canvas = window.game_canvas;
+
+  switch (quadrant) {
+    case 1:
+      return [canvas.width - canvas.square_width - 10, 5];
+    case 2:
+      return [5, 5];
+    case 3:
+      return [5, canvas.height - canvas.square_height - 10];
+    case 4:
+      return [
+        canvas.width - canvas.square_width - 10,
+        canvas.height - canvas.square_height - 10,
+      ];
+  }
 }

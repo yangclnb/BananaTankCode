@@ -3,9 +3,7 @@ import { map_faction_position, map_color_scheme } from "./EnumObject.js";
 export class Canvas {
   constructor(canvasElement) {
     this.canvas = canvasElement;
-    const ctx = canvasElement.getContext("2d");
-
-    this.ctx = ctx;
+    this.ctx = canvasElement.getContext("2d");
     this.width = this.canvas.width;
     this.height = this.canvas.height;
     this.minimum_x = 25;

@@ -17,6 +17,8 @@ import {
 } from "@/tank/main.js";
 import { onMounted, onUnmounted, ref } from "vue";
 import { useConsoleDisplayStore } from "@/stores/consoleStatus";
+import { useTankStatusStore } from "../stores/tankStatus";
+import { storeToRefs } from "pinia";
 
 let currentAnimateState = ref("暂停");
 const startAndStop = () => {
@@ -35,11 +37,14 @@ onUnmounted(() => {
 });
 
 // 控制控制台出现
-
-const store = useConsoleDisplayStore();
+const consoleDisplay = useConsoleDisplayStore();
 function showConsole() {
-  store.show();
+  consoleDisplay.show();
 }
+
+// 控制游戏模式
+const gameMode = useTankStatusStore();
+const { mode } = storeToRefs(gameMode);
 </script>
 
 <template>
@@ -50,13 +55,20 @@ function showConsole() {
         <div id="left_tools">
           <el-dropdown trigger="click">
             <el-button color="var(--theme-second-background)">
-              开发者模式<el-icon class="el-icon--right"><arrow-down /></el-icon>
+              {{ mode + " 模式"
+              }}<el-icon class="el-icon--right"><arrow-down /></el-icon>
             </el-button>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item>PVP模式</el-dropdown-item>
-                <el-dropdown-item>PVE模式</el-dropdown-item>
-                <el-dropdown-item>开发者模式</el-dropdown-item>
+                <el-dropdown-item @click="gameMode.PVPBattleMode"
+                  >PVP模式</el-dropdown-item
+                >
+                <el-dropdown-item @click="gameMode.PVEBattleMode"
+                  >PVE模式</el-dropdown-item
+                >
+                <el-dropdown-item @click="gameMode.consoleBattleMode"
+                  >开发者模式</el-dropdown-item
+                >
               </el-dropdown-menu>
             </template>
           </el-dropdown>

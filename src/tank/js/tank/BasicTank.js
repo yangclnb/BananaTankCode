@@ -1,4 +1,4 @@
-import { playBoom } from "./ControlGIF.js";
+import { playBoom } from "../utils/ControlGIF.js";
 import {
   map_faction_position,
   tank_action,
@@ -6,8 +6,10 @@ import {
   tank_turn,
   action_mode,
   event_priority,
-} from "./EnumObject.js";
-import { angle, classify_radian, radian } from "./utils.js";
+} from "../EnumObject.js";
+import { angle, classify_radian, radian } from "../utils/utils.js";
+
+window.tank_list = [];
 
 export class Tank {
   action_queue = new Array(); // 行为队列
@@ -20,7 +22,6 @@ export class Tank {
    * @param {Number} cannon_angle 炮塔角度
    * @param {String} tank_color 坦克颜色 [red, blue, yellow, green]
    * @param {Number} faction 队伍 [0，1，2，3]
-   * @param {Boolean} is_player 是否是玩家控制，默认true
    * @author: Banana
    */
   constructor(
@@ -30,13 +31,12 @@ export class Tank {
     cannon_angle,
     radar_angle,
     tank_color,
-    faction,
-    is_player = true
+    faction
   ) {
     this.faction = faction;
 
     console.log("Init " + tank_color);
-
+    console.log("tank_angle :>> ", tank_angle, angle(tank_angle));
     this.tank = {
       x: x + 23,
       y: y + 20,
@@ -563,7 +563,7 @@ export class Tank {
     else if (quadrant === "+x") return 0;
     else if (quadrant === "+y") return 90;
     else if (quadrant === "-x") return 180;
-    else if (quadrant === "-x") return 270;
+    else if (quadrant === "-y") return 270;
   }
 
   // 停止雷达扫描
@@ -594,14 +594,9 @@ export class Tank {
   run = {
     // 正常运行时操作
     operation() {
-      // 动作循环 ----------------
-      this.loop = function () {
-        this.tank_turn(45);
-        this.ahead(200);
-        this.radar_turn(360);
-      };
-      // 还是需要执行的
-      this.loop();
+      this.ahead(100);
+      this.tank_turn(-90);
+      this.ahead(100);
     },
 
     // 重复循环执行函数
@@ -1218,7 +1213,7 @@ export class Tank {
 
   // 执行当前的操作
   operation_action(operation, current_index) {
-    // 若当前队列除 执行状态false 的行为外不存在其他行为，直接脱出
+    // 若当前队列除 执行状态false 的行为外不存在其他行为，直接退出
     if (operation === undefined) return;
 
     // 若 当前队首的 (已经操作数量) 大于 (预计执行的数量) 将队首出队并且重新执行该函数
@@ -1418,7 +1413,6 @@ export class Tank {
           real_right_y
         )
       ) {
-        //TODO 击中目标触发爆炸动画 & 取消绘制线程
         console.log(this.tank.color + " 击中！=> " + key);
         this.hit_tank(key);
         clearInterval(this.cannon.thread);
@@ -1614,4 +1608,14 @@ export class Tank {
     }
     return false;
   }
+}
+
+// 添加坦克
+export function addTank(newTank) {
+  window.tank_list.push(newTank);
+}
+
+// 初始化坦克列表
+export function initTankList() {
+  window.tank_list = [];
 }

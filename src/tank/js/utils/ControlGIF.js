@@ -1,11 +1,11 @@
-import boom1 from "../img/boom/1.png";
-import boom2 from "../img/boom/2.png";
-import boom3 from "../img/boom/3.png";
-import boom4 from "../img/boom/4.png";
-import boom5 from "../img/boom/5.png";
-import boom6 from "../img/boom/6.png";
-import boom7 from "../img/boom/7.png";
-import boom8 from "../img/boom/8.png";
+import boom1 from "../../img/boom/1.png";
+import boom2 from "../../img/boom/2.png";
+import boom3 from "../../img/boom/3.png";
+import boom4 from "../../img/boom/4.png";
+import boom5 from "../../img/boom/5.png";
+import boom6 from "../../img/boom/6.png";
+import boom7 from "../../img/boom/7.png";
+import boom8 from "../../img/boom/8.png";
 
 const boom = [boom1, boom2, boom3, boom4, boom5, boom6, boom7, boom8];
 window.boom_play_list = []; // 爆炸队列
