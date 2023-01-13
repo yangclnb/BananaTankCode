@@ -2,11 +2,12 @@
 import MonacoEditor from "monaco-editor-vue3";
 import { vDrag } from "@/tank/js/utils/drag.js";
 import { onMounted, reactive, ref } from "vue";
+import { ElMessage } from "element-plus";
 import { useConsoleDisplayStore } from "@/stores/consoleStatus";
 import { storeToRefs } from "pinia";
 import { useTankStatusStore } from "../stores/tankStatus";
 import { UserTank } from "@/tank/js/tank/UserTank.js";
-
+import { AITank } from "@/tank/js/tank/AITank.js";
 const store = useConsoleDisplayStore();
 const { state } = storeToRefs(store);
 
@@ -21,7 +22,7 @@ let options = reactive({
   autoClosingBrackets: true,
 });
 
-let defaultValue = ref(`// 运行时触发
+let defaultValue = ref(`// tank的运动方法
 const run = function () {
   // 调整为异步执行模式
   // this.asynchronous_mode();
@@ -85,24 +86,27 @@ const run = function () {
 };
 
 // 发现敌人时触发
-const scannedRobot = function(){
-  
+// enemy_angle 敌人的角度
+const scannedRobot = function(enemy_angle){
+  // this.say("我发现你了~~");
 }
 
 // 撞墙时触发
 const hitWall = function(){
-
+  // this.say("怎么撞墙了");
+  // this.back(30);
+  // this.tank_turn(45);
 }
 
 // 被击中时触发
 const hitByBullet = function(){
-  
+  // this.say("捏麻麻滴");
 }
 
 // 初始化配置
 const options = {
   color: "red", //坦克颜色
-  initDirection: 270, // 坦克初始朝向，输入角度
+  initDirection: 230, // 坦克初始朝向，输入角度
   initPosition: 1, //初始位置，按照象限划分
 };
 
@@ -120,20 +124,43 @@ function closeConsole() {
   store.hidde();
 }
 
+// 获取游戏模式
 const gameMode = useTankStatusStore();
 const { mode } = storeToRefs(gameMode);
 
-// 输入改变时调用
-function onChange(value) {
-  // console.log(value);
+// 更新代码防抖
+function updateTankCheck() {
+  let timer = null;
+  return function (value) {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      // 判断当前游戏模式
+      if (mode.value === "console") {
+        UserTank.executeUserCode(value);
 
-  // 判断当前游戏模式
-  if (mode.value === "console") {
-    UserTank.executeUserCode(value);
-    console.log("window.tank_list :>> ", window.tank_list);
-  }
+        // console.log("window.tank_list :>> ", window.tank_list);
+      } else if (mode.value === "pve") {
+        UserTank.executeUserCode(value);
+        AITank.create();
+        AITank.create();
+        AITank.create();
+      }
+
+      ElMessage({
+        message: `您提交的代码已更新 - 当前模式 ${mode.value.toUpperCase()}`,
+        type: "success",
+      });
+    }, 2000);
+  };
 }
 
+const updateTank = updateTankCheck();
+// 输入改变时调用
+function onChange(value) {
+  updateTank(value);
+}
+
+// 添加拖动
 onMounted(() => {
   vDrag.inserted(editor.value);
 });

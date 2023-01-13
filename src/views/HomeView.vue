@@ -1,5 +1,5 @@
 <script setup>
-import Editor from "../components/Editor.vue";
+import Editor from "../components/CodeEditor.vue";
 import HeadPart from "../components/HeadPart.vue";
 
 import {
@@ -55,7 +55,7 @@ const { mode } = storeToRefs(gameMode);
         <div id="left_tools">
           <el-dropdown trigger="click">
             <el-button color="var(--theme-second-background)">
-              {{ mode + " 模式"
+              {{ mode.toUpperCase() + " 模式"
               }}<el-icon class="el-icon--right"><arrow-down /></el-icon>
             </el-button>
             <template #dropdown>

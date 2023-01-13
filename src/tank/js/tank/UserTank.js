@@ -16,6 +16,7 @@ export class UserTank {
   static create(options, onRun, onScannedRobot, onHitWall, onHitByBullet) {
     // 初始化位置
     const [x, y] = getQuadrantCorner(options.initPosition);
+    console.log("x,y :>> ", x, y);
     const tank = new Tank(
       x,
       y,
@@ -26,7 +27,7 @@ export class UserTank {
       1
     );
 
-    tank.run.operation = onRun;
+    tank.run.operation = onRun ? onRun : function () {};
     tank.on_scanned_robot.operation = onScannedRobot
       ? onScannedRobot
       : function () {};

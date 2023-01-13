@@ -36,7 +36,6 @@ export class Tank {
     this.faction = faction;
 
     console.log("Init " + tank_color);
-    console.log("tank_angle :>> ", tank_angle, angle(tank_angle));
     this.tank = {
       x: x + 23,
       y: y + 20,
@@ -593,11 +592,7 @@ export class Tank {
   // 初始化运行
   run = {
     // 正常运行时操作
-    operation() {
-      this.ahead(100);
-      this.tank_turn(-90);
-      this.ahead(100);
-    },
+    operation() {},
 
     // 重复循环执行函数
     loop: function () {

@@ -4,6 +4,7 @@ import { Tank, addTank } from "./js/tank/BasicTank.js";
 import resource_img from "./img/tank_no_background.png";
 import { playBoomList } from "./js/utils/ControlGIF";
 import { UserTank } from "./js/tank/UserTank.js";
+import { AITank } from "./js/tank/AITank.js";
 
 window.tank_img = new Image();
 window.tank_position = new Map();
@@ -44,7 +45,7 @@ export function init_tank() {
   window.tank_list = [];
 
   UserTank.create(
-    { color: "red", initDirection: 0, initPosition: 4 },
+    { color: "blue", initDirection: 0, initPosition: 2 },
     function () {
       this.back(100);
     },
@@ -52,6 +53,10 @@ export function init_tank() {
     null,
     null
   );
+
+  AITank.create();
+  AITank.create();
+  AITank.create();
 
   // let tank = new Tank(600, 300, 0, 0, 0, "blue", 0);
   // tank.run.operation = function () {
@@ -101,71 +106,3 @@ export function stopAnimate() {
 export function restart() {
   init_tank();
 }
-
-function run() {
-  // 调整为异步执行模式
-  // this.asynchronous_mode();
-  // this.say("我是异步运动的~");
-
-  // 检测敌人 -----------------
-  // this.radar_turn(-300);
-  // this.back(400);
-
-  // 检测行动 -----------------
-  // this.say("我先开一炮");
-  // this.fire();
-  // this.say("向前移动 200");
-  // this.ahead(200);
-  // this.say("向左转 45°");
-  // this.tank_turn(45);
-  // this.say("向前移动 200");
-  // this.ahead(200);
-  // this.say("向右转 45°");
-  // this.tank_turn(-45);
-  // this.say("向后移动 100");
-  // this.back(100);
-  // this.say("向左转 90°");
-  // this.tank_turn(90);
-  // this.say("向前移动 20");
-  // this.ahead(20);
-  // this.say("向右转 180°");
-  // this.tank_turn(-180);
-  // this.say("向前移动 200");
-  // this.ahead(200);
-  // this.say("炮口向右转 90°");
-  // this.cannon_turn(-90);
-  // this.say("雷达向右转 180°");
-  // this.radar_turn(-180);
-  // this.say("再来一炮");
-  // this.fire();
-
-  // 方向测试 ----------------
-  // this.ahead(300);
-
-  // 调试弹道 ----------------
-  // this.cannon_turn(330);
-  // this.fire();
-
-  // 测试异步执行 -------------
-  // this.fire();
-  // this.tank_turn(360);
-  // this.radar_turn(360);
-  // this.ahead(500);
-  // this.say("到达终点");
-
-  // 动作循环 ----------------
-  this.loop = function () {
-    this.tank_turn(30);
-    this.ahead(200);
-    this.cannon_turn(360);
-    this.radar_turn(360);
-  };
-  // 还是需要执行的
-  this.loop();
-}
-
-const hitWall = function () {
-  this.say("撞墙啦");
-  this.tank_turn(45);
-  this.back(20);
-};

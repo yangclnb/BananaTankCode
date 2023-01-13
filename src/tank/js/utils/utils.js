@@ -97,3 +97,54 @@ export function getQuadrantCorner(quadrant) {
       ];
   }
 }
+
+/**
+ * @function:
+ * @description: 通过初始位置判断出生点的象限
+ * @param {*} x
+ * @param {*} y
+ * @return {*}
+ * @author: Banana
+ */
+export function getQuadrantByPosition(x, y) {
+  const canvas = window.game_canvas;
+
+  if (x > canvas.width / 2) {
+    if (y > canvas.height / 2) return 4;
+    else return 1;
+  } else {
+    if (y > canvas.height / 2) return 3;
+    else return 2;
+  }
+}
+
+/**
+ * @function: getSparePosition
+ * @description: 从坦克队列中获取尚未被占据的位置，全部被占据时返回 undefined
+ * @return {*}
+ * @author: Banana
+ */
+export function getSparePosition() {
+  let position = [false, false, false, false];
+  window.tank_list.map((item) => {
+    position[getQuadrantByPosition(item.tank.x, item.tank.y) - 1] = true;
+  });
+  const spareVal = position.findIndex((val) => val === false);
+  return spareVal === -1 ? undefined : spareVal + 1;
+}
+
+/**
+ * @function: getSpareColor
+ * @description: 从坦克队列中获取尚未被占据的颜色，全部被占据时返回 undefined
+ * @return {*}
+ * @author: Banana
+ */
+export function getSpareColor() {
+  const currentColor = { red: 0, blue: 1, green: 2, yellow: 3 };
+  const currentIndexColor = { 0: "red", 1: "blue", 2: "green", 3: "yellow" };
+  let temp = [false, false, false, false];
+  window.tank_list.map((item) => {
+    temp[currentColor[item.tank.color]] = true;
+  });
+  return currentIndexColor[temp.findIndex((val) => val === false)];
+}
