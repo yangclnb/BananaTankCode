@@ -51,7 +51,7 @@ import {
 
 <style lang="less" scoped>
 nav {
-  width: 70px;
+  min-width: 70px;
   height: 100vh;
   background-color: #1d2839;
 

@@ -4,7 +4,7 @@ import MarkdownIt from "markdown-it";
 import hljs from "highlight.js";
 
 import "github-markdown-css";
-import "highlight.js/styles/github.css";
+import "highlight.js/styles/atom-one-dark-reasonable.css";
 
 const val = `
 # BananaCodeTank
