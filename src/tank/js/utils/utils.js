@@ -148,3 +148,17 @@ export function getSpareColor() {
   });
   return currentIndexColor[temp.findIndex((val) => val === false)];
 }
+
+/**
+ * @function:
+ * @description: 格式化字符串，a:b => a(num1的数量)(num2的数量)b 以空格填充
+ * @param {*} str1 字符串1
+ * @param {*} str2 字符串1
+ * @param {*} num1 格式字符串1的最大填充数量
+ * @param {*} num2 格式字符串2的最大填充数量
+ * @return {*}
+ * @author: Banana
+ */
+export function formatString(str1, str2, num1, num2) {
+  return str1.padEnd(num1, " ") + str2.padStart(num2, " ");
+}

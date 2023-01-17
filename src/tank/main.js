@@ -1,5 +1,5 @@
 import { Canvas } from "./js/canvas.js";
-import { Tank, addTank } from "./js/tank/BasicTank.js";
+import { checkResult } from "./js/tank/BasicTank.js";
 // import resource_img from "./img/tank.png";
 import resource_img from "./img/tank_no_background.png";
 import { playBoomList } from "./js/utils/ControlGIF";
@@ -44,16 +44,17 @@ export function init_canvas() {
 export function init_tank() {
   window.tank_list = [];
 
-  UserTank.create(
-    { color: "blue", initDirection: 0, initPosition: 2 },
-    function () {
-      this.back(100);
-    },
-    null,
-    null,
-    null
-  );
+  // UserTank.create(
+  //   { color: "blue", initDirection: 0, initPosition: 2 },
+  //   function () {
+  //     this.back(100);
+  //   },
+  //   null,
+  //   null,
+  //   null
+  // );
 
+  AITank.create();
   AITank.create();
   AITank.create();
   AITank.create();
@@ -81,7 +82,9 @@ export function init_tank() {
  * @author: Banana
  */
 function animate() {
-  if (window.play_animate) {
+  //TODO 判断用户坦克状态 是胜利或失败执行对应的动画 然后return
+
+  if (window.play_animate && window.tank_list.length) {
     window.game_canvas.init();
     // console.log('window.tank_position :>> ', window.tank_position);
     window.tank_list.forEach((tank_item) => {
@@ -89,7 +92,10 @@ function animate() {
       tank_item.implement_current_operation();
       tank_item.draw();
     });
+    // 播放爆炸动画
     playBoomList();
+    // 判断用户是否胜利
+    checkResult();
   }
 
   requestAnimationFrame(animate);
