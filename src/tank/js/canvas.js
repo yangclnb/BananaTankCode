@@ -1,4 +1,6 @@
 import { map_faction_position, map_color_scheme } from "./EnumObject.js";
+import { Tank } from "./tank/BasicTank.js";
+import { formatString } from "./utils/utils.js";
 
 export class Canvas {
   constructor(canvasElement) {
@@ -150,5 +152,54 @@ export class Canvas {
     this.ctx.stroke();
     this.ctx.closePath();
     stack("pop");
+  }
+
+  /**
+   * @function: settlementPage
+   * @description: 绘制结算界面
+   * @author: Banana
+   */
+  settlementPage(userInfo) {
+    const date = new Date(userInfo.serviveTime);
+    const M = date.getMinutes();
+    const S = date.getSeconds();
+    const serviveTime = `${M}:${S}`;
+    // 填充背景
+    this.ctx.fillStyle = "#1D2839";
+    this.ctx.fillRect(0, 0, this.width, this.height);
+    // 填充展示框
+    this.ctx.fillStyle = "#111927";
+    this.ctx.fillRect(this.width / 2 - 300, 50, 600, 400);
+
+    // 绘制用户的坦克
+    new Tank(250, 350, 90, 90, 90, window.userTank.color, 0);
+    // 左右分割线
+    this.ctx.beginPath();
+    this.ctx.strokeStyle = "#1D2839";
+    this.ctx.moveTo(390, 60);
+    this.ctx.lineTo(390, 440);
+    this.ctx.stroke();
+    this.ctx.closePath();
+
+    // 右侧数据
+    this.ctx.textAlign = "left";
+    this.ctx.font = "normal bold 40px serif"; // 设置文案大小和字体
+    this.ctx.fillStyle = "#D91139";
+    this.ctx.lineCap = "round";
+    this.ctx.fillText(userInfo.state, 420, 150);
+    formatString;
+    this.ctx.font = "16px serif"; // 设置文案大小和字体
+    this.ctx.fillText(
+      formatString("您控制的坦克", userInfo.color, 18, 14),
+      420,
+      180
+    );
+    this.ctx.fillText(formatString("存活时长", serviveTime, 18, 16), 420, 210);
+
+    this.ctx.fillText(
+      formatString("击中数量", "" + userInfo.hitNumber, 18, 16),
+      420,
+      240
+    );
   }
 }

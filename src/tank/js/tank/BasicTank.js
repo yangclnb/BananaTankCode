@@ -7,12 +7,7 @@ import {
   action_mode,
   event_priority,
 } from "../EnumObject.js";
-import {
-  angle,
-  classify_radian,
-  radian,
-  formatString,
-} from "../utils/utils.js";
+import { angle, classify_radian, radian } from "../utils/utils.js";
 
 window.tank_list = [];
 
@@ -1390,13 +1385,13 @@ export class Tank {
       const real_right_x = right_x + origin_cannon_x;
       const real_right_y = origin_cannon_y - right_y;
 
-      window.game_canvas.vision_position(real_left_x, real_left_y, "red");
-      window.game_canvas.vision_position(real_right_x, real_right_y, "gold");
-      window.game_canvas.vision_position(
-        origin_cannon_x,
-        origin_cannon_y,
-        "black"
-      );
+      // window.game_canvas.vision_position(real_left_x, real_left_y, "red");
+      // window.game_canvas.vision_position(real_right_x, real_right_y, "gold");
+      // window.game_canvas.vision_position(
+      //   origin_cannon_x,
+      //   origin_cannon_y,
+      //   "black"
+      // );
 
       // console.log(
       //   `炮弹(${origin_cannon_x},${origin_cannon_y}) \n
@@ -1415,6 +1410,10 @@ export class Tank {
         )
       ) {
         console.log(this.tank.color + " 击中！=> " + key);
+        // 若是用户的坦克反馈战绩
+        if (window.userTank && window.userTank.color === this.tank.color)
+          window.userTank.hitNumber++;
+
         this.hit_tank(key);
         clearInterval(this.cannon.thread);
         this.cannon.thread = null;
@@ -1462,12 +1461,6 @@ export class Tank {
   death() {
     this.tank.current_blood--;
 
-    //TODO 若被摧毁的是用户的坦克，直接结束游戏
-    if (this.tank.color === window.userTank.color) {
-      window.userTank.state = "death";
-      window.userTank.serviveTime = Date.now() - window.userTank.serviveTime;
-    }
-
     // 从坦克队列中去除
     let index = 0;
     for (const tank_item of window.tank_list) {
@@ -1476,6 +1469,18 @@ export class Tank {
         break;
       }
       index++;
+    }
+
+    // 若被摧毁的是用户的坦克，直接结束游戏
+    if (window.userTank && this.tank.color === window.userTank.color) {
+      window.userTank.state = "death";
+      window.userTank.serviveTime = Date.now() - window.userTank.serviveTime;
+    } else if (
+      window.tank_list.length === 1 &&
+      window.tank_list[0].tank.color === window.userTank.color
+    ) {
+      window.userTank.state = "victory";
+      window.userTank.serviveTime = Date.now() - window.userTank.serviveTime;
     }
 
     // console.log("window.tank_list :>> ", window.tank_list);
@@ -1628,68 +1633,22 @@ export function initTankList() {
 export function checkResult() {
   if (!window.userTank) return;
 
+  console.log("window.tank_list :>> ", window.tank_list);
+
   // 判断胜利
   // 判断失败
   if (window.userTank.state === "death") {
     initTankList();
-    const data = window.userTank;
-    const date = new Date(data.serviveTime);
-    const M = date.getMinutes();
-    const S = date.getSeconds();
-    const serviveTime = `${M}:${S}`;
-    console.log("window.userTank :>> ", window.userTank);
 
-    //TODO 结算页面
-    // 填充背景
-    const canvas = window.game_canvas;
-    canvas.ctx.fillStyle = "#1D2839";
-    canvas.ctx.fillRect(0, 0, canvas.width, canvas.height);
-    // 填充展示框
-    canvas.ctx.fillStyle = "#111927";
-    canvas.ctx.fillRect(canvas.width / 2 - 300, 50, 600, 400);
-
-    // 绘制用户的坦克
-    new Tank(250, 350, 90, 90, 90, window.userTank.color, 0);
-
-    // 左右分割线
-    canvas.ctx.beginPath();
-    canvas.ctx.strokeStyle = "#1D2839";
-    canvas.ctx.moveTo(390, 60);
-    canvas.ctx.lineTo(390, 440);
-    canvas.ctx.stroke();
-    canvas.ctx.closePath();
-
-    // 右侧数据
-    canvas.ctx.textAlign = "left";
-    canvas.ctx.font = "normal bold 40px serif"; // 设置文案大小和字体
-    canvas.ctx.fillStyle = "#D91139";
-    canvas.ctx.lineCap = "round";
-    canvas.ctx.fillText("Fail", 420, 150);
-    formatString;
-    canvas.ctx.font = "16px serif"; // 设置文案大小和字体
-    canvas.ctx.fillText(
-      formatString("您控制的坦克", data.color, 18, 14),
-      420,
-      180
-    );
-    canvas.ctx.fillText(
-      formatString("存活时长", serviveTime, 18, 16),
-      420,
-      210
-    );
-
-    canvas.ctx.fillText(
-      formatString("击毁数量", "" + data.killsNumber, 18, 16),
-      420,
-      240
-    );
+    window.game_canvas.settlementPage(window.userTank);
 
     window.userTank = undefined;
-    // canvas.ctx.direction = "ltr"; // 文本方向从左向右
-    // canvas.ctx.font = "normal bold 40px serif"; // 设置文案大小和字体
-    // canvas.ctx.textAlign = "center";
-    // canvas.ctx.fillStyle = "#D91139";
-    // canvas.ctx.lineCap = "round";
-    // canvas.ctx.fillText("Fail", canvas.width / 2, 100);
+  } else if (window.userTank.state === "victory") {
+    // 判断胜利
+    initTankList();
+
+    window.game_canvas.settlementPage(window.userTank);
+
+    window.userTank = undefined;
   }
 }

@@ -41,7 +41,7 @@ export class UserTank {
     // 全局存放用户坦克的颜色，作为判断胜利的条件
     window.userTank = {
       color: options.color,
-      killsNumber: 0,
+      hitNumber: 0,
       serviveTime: Date.now(),
       state: "live", // 存活，死亡，胜利
     };
