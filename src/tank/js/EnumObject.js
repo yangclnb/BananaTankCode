@@ -13,12 +13,16 @@ export const map_faction_position = {
 // 条形背景贴图预设的颜色
 export const map_color_scheme = {
   a: ["#83af9b", "#f9cdad"],
-  b: ["#FC354C", "#0ABFBC"],
+  b: ["#111927", "#1D2839"],
   c: ["#a73737", "#7a2828"],
 };
 
 // tank 的状态
-export const tank_state = { destroy: 0, normal: 1 };
+export const tankState = {
+  fail: "FAIL",
+  victory: "VICTORY",
+  normal: "NORMAL",
+};
 
 // tank 的转向
 export const tank_turn = { left: 0, right: 1 };

@@ -19,8 +19,8 @@ export class Canvas {
 
   init() {
     this.create_vertical_background(
-      map_color_scheme.a[0],
-      map_color_scheme.a[1]
+      map_color_scheme.b[0],
+      map_color_scheme.b[1]
     );
     // this.fill_texture_background("rock_map");
   }
@@ -181,25 +181,39 @@ export class Canvas {
     this.ctx.stroke();
     this.ctx.closePath();
 
+    let originalTextPosition = 150;
+
     // 右侧数据
     this.ctx.textAlign = "left";
     this.ctx.font = "normal bold 40px serif"; // 设置文案大小和字体
-    this.ctx.fillStyle = "#D91139";
+    this.ctx.fillStyle = "#52A652";
     this.ctx.lineCap = "round";
-    this.ctx.fillText(userInfo.state, 420, 150);
-    formatString;
+    this.ctx.fillText(userInfo.state, 420, originalTextPosition);
+
     this.ctx.font = "16px serif"; // 设置文案大小和字体
     this.ctx.fillText(
       formatString("您控制的坦克", userInfo.color, 18, 14),
       420,
-      180
+      (originalTextPosition += 100)
     );
-    this.ctx.fillText(formatString("存活时长", serviveTime, 18, 16), 420, 210);
+    this.ctx.fillText(
+      formatString("存活时长", serviveTime, 18, 16),
+      420,
+      (originalTextPosition += 50)
+    );
 
     this.ctx.fillText(
       formatString("击中数量", "" + userInfo.hitNumber, 18, 16),
       420,
-      240
+      (originalTextPosition += 50)
+    );
+
+    this.ctx.fillStyle = "#D8DFEA";
+    this.ctx.font = "12px serif"; // 设置文案大小和字体
+    this.ctx.fillText(
+      formatString("    ", "重新提交代码可再次挑战", 18, 22),
+      420,
+      (originalTextPosition += 50)
     );
   }
 }

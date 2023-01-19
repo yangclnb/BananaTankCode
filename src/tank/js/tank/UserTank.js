@@ -1,3 +1,4 @@
+import { tankState } from "../EnumObject.js";
 import { getQuadrantCorner } from "../utils/utils.js";
 import { Tank, addTank, initTankList } from "./BasicTank.js";
 
@@ -43,7 +44,7 @@ export class UserTank {
       color: options.color,
       hitNumber: 0,
       serviveTime: Date.now(),
-      state: "live", // 存活，死亡，胜利
+      state: tankState.normal, // 存活，死亡，胜利
     };
 
     tank.run.operation();

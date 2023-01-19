@@ -2,10 +2,10 @@ import { playBoom } from "../utils/ControlGIF.js";
 import {
   map_faction_position,
   tank_action,
-  tank_state,
   tank_turn,
   action_mode,
   event_priority,
+  tankState,
 } from "../EnumObject.js";
 import { angle, classify_radian, radian } from "../utils/utils.js";
 
@@ -43,7 +43,6 @@ export class Tank {
       current_blood: 3,
       color: map_faction_position[tank_color] ? tank_color : "red_tank",
       angle: angle(tank_angle),
-      current_state: tank_state.normal, // 坦克状态
       action: tank_action.tank_move, // 坦克行为
       speed: 0.5, // 移动速度
       rotate_speed: angle(0.25), // 一帧调整坦克朝向0.25°
@@ -71,9 +70,9 @@ export class Tank {
     this.radar = {
       angle: angle(radar_angle),
       rotate_state: true, // 是否允许雷达旋转
-      rotate_speed: angle(0.5), // 一帧雷达扫描0.5°
+      rotate_speed: angle(1), // 一帧雷达扫描1°
       turn_direction: tank_turn.left, // 下次雷达的转向
-      largest_distance: window.game_canvas.square_width * 8, // 最远扫描距离
+      largest_distance: window.game_canvas.square_width * 9, // 最远扫描距离 九个单位
       darw_radar: true,
     };
 
@@ -117,7 +116,7 @@ export class Tank {
     ctx.direction = "ltr"; // 文本方向从左向右
     ctx.font = "15px serif"; // 设置文案大小和字体
     ctx.textAlign = "center";
-    ctx.fillStyle = "black";
+    ctx.fillStyle = "#D8DFEA";
     ctx.lineCap = "round";
     ctx.fillText(this.current_show_text, 0, -40);
     translate_stack("pop");
@@ -1473,13 +1472,13 @@ export class Tank {
 
     // 若被摧毁的是用户的坦克，直接结束游戏
     if (window.userTank && this.tank.color === window.userTank.color) {
-      window.userTank.state = "death";
+      window.userTank.state = tankState.fail;
       window.userTank.serviveTime = Date.now() - window.userTank.serviveTime;
     } else if (
       window.tank_list.length === 1 &&
       window.tank_list[0].tank.color === window.userTank.color
     ) {
-      window.userTank.state = "victory";
+      window.userTank.state = tankState.victory;
       window.userTank.serviveTime = Date.now() - window.userTank.serviveTime;
     }
 
@@ -1629,26 +1628,27 @@ export function initTankList() {
   window.tank_list = [];
 }
 
+// window.userTank = {
+//   color: "red",
+//   hitNumber: 0,
+//   serviveTime: 35283,
+//   state: "FAIL",
+// };
+
 // 判断是否胜利
 export function checkResult() {
   if (!window.userTank) return;
 
-  console.log("window.tank_list :>> ", window.tank_list);
+  // console.log("window.tank_list :>> ", window.tank_list);
 
-  // 判断胜利
-  // 判断失败
-  if (window.userTank.state === "death") {
+  // 判断用户的坦克是否为 胜利或失败 的状态
+  if (
+    window.userTank.state === tankState.fail ||
+    window.userTank.state === tankState.victory
+  ) {
     initTankList();
-
     window.game_canvas.settlementPage(window.userTank);
-
-    window.userTank = undefined;
-  } else if (window.userTank.state === "victory") {
-    // 判断胜利
-    initTankList();
-
-    window.game_canvas.settlementPage(window.userTank);
-
+    console.log("object :>> ", window.userTank);
     window.userTank = undefined;
   }
 }
