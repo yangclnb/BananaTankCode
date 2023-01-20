@@ -1,0 +1,18 @@
+.markdown-body {
+    color: var(--theme-main-font);
+    box-sizing: border-box;
+    min-width: 200px;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 45px;
+    background-color: var(--theme-second-background);
+    --color-canvas-subtle: #111927;
+}
+
+@media (max-width: 576px) {
+    .markdown-body {
+        width: 100%;
+        padding: 20px;
+
+    }
+}

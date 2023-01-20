@@ -133,5 +133,9 @@ nav {
   #dropdownMenu {
     background-color: red;
   }
+
+  @media (max-width: 576px) {
+    display: none;
+  }
 }
 </style>
