@@ -38,7 +38,7 @@ const createJSFile = fp.flowRight(
   fp.filter((fileName) => fileName.endsWith(".md")),
   (fileName) => {
     // 若不存在 jsDocs 文件夹则添加此文件夹
-    if (!fileName.includes("jsDocs")) fs.mkdirSync(`${fileName}/jsDocs`);
+    if (!fileName.includes("jsDocs")) fs.mkdirSync(`./src/docs/jsDocs`);
     return fileName;
   },
   fs.readdirSync
