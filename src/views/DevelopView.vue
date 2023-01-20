@@ -1,5 +1,5 @@
 <script setup>
-import { mdFile } from "../docs/jsDocs/help.js";
+import { mdFile } from "../docs/jsDocs/DevDocument.js";
 import HeadPart from "../components/HeadPart.vue";
 import MarkdownIt from "markdown-it";
 import hljs from "highlight.js";
@@ -24,14 +24,14 @@ const result = md.render(mdFile);
 </script>
 
 <template>
-  <div id="help">
+  <div id="devDocument">
     <HeadPart />
     <div class="markdown-body" v-html="result"></div>
   </div>
 </template>
 
 <style lang="less" scoped>
-#help {
+#devDocument {
   width: 100%;
   display: flex;
   flex-direction: column;

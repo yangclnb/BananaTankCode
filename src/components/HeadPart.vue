@@ -1,6 +1,11 @@
 <script setup>
 import { ElButton } from "element-plus";
 import { Document, Share } from "@element-plus/icons-vue";
+import router from "../router";
+
+const toDevDocPage = () => {
+  router.push({ name: "devDoc" });
+};
 </script>
 
 <template>
@@ -8,7 +13,10 @@ import { Document, Share } from "@element-plus/icons-vue";
     <h2><span>Tank</span> <span>Code</span></h2>
     <div id="button_box">
       <el-button :icon="Share" color="var(--theme-red-color)">分享</el-button>
-      <el-button :icon="Document" color="var(--theme-green-color)"
+      <el-button
+        :icon="Document"
+        color="var(--theme-green-color)"
+        @click="toDevDocPage"
         >开发文档</el-button
       >
     </div>

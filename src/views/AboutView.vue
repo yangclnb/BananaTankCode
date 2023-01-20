@@ -1,5 +1,5 @@
 <script setup>
-import { mdFile } from "../docs/DevDocument.js";
+import { mdFile } from "../docs/jsDocs/about.js";
 import HeadPart from "../components/HeadPart.vue";
 import MarkdownIt from "markdown-it";
 import hljs from "highlight.js";
@@ -35,22 +35,5 @@ const result = md.render(mdFile);
   width: 100%;
   display: flex;
   flex-direction: column;
-
-  .markdown-body {
-    color: var(--theme-main-font);
-    box-sizing: border-box;
-    min-width: 200px;
-    max-width: 980px;
-    margin: 0 auto;
-    padding: 45px;
-    background-color: var(--theme-second-background);
-    --color-canvas-subtle: #111927;
-  }
-}
-
-@media (max-width: 767px) {
-  .markdown-body {
-    padding: 15px;
-  }
 }
 </style>
