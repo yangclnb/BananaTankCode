@@ -96,6 +96,46 @@ export class Tank {
     const square_width = window.game_canvas.square_width;
     const square_height = window.game_canvas.square_height;
 
+    // 炮弹 ---------------------
+    //! 不能依靠坦克本身的坐标作为绘制依据
+    translate_stack(
+      "push",
+      [this.cannon.launch_x, this.cannon.launch_y],
+      (a, b) => {
+        ctx.translate(a, b);
+      }
+    );
+    // 初始角度调整为 y=kx 与 x 轴正方向的夹角
+    translate_stack("push", [-angle(90)], (a) => {
+      ctx.rotate(a);
+    });
+    translate_stack("push", [angle(90)], (a) => {
+      ctx.rotate(a);
+    });
+    translate_stack("push", [this.cannon.x, this.cannon.y], (a, b) => {
+      ctx.translate(a, b);
+    });
+    translate_stack("push", [-this.cannon.cannonball_angle], (a) => {
+      ctx.rotate(a);
+    });
+
+    if (this.cannon.thread !== null) {
+      ctx.beginPath();
+      ctx.lineWidth = 5;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = this.tank.color;
+      ctx.moveTo(-2.5, 0);
+      ctx.lineTo(2.5, 0);
+      ctx.stroke();
+      ctx.closePath();
+    }
+    translate_stack("pop");
+    translate_stack("pop");
+    translate_stack("pop");
+    translate_stack("pop");
+    translate_stack("pop");
+    translate_stack("pop");
+
     // console.log("square width and height:>> ", square_width, square_height);
     ctx.beginPath();
 
@@ -190,31 +230,6 @@ export class Tank {
       translate_stack("pop");
     }
 
-    // 炮弹 ---------------------
-    //! 不能依靠坦克本身的坐标作为绘制依据
-    translate_stack("push", [angle(90)], (a) => {
-      ctx.rotate(a);
-    });
-    translate_stack("push", [this.cannon.x, this.cannon.y], (a, b) => {
-      ctx.translate(a, b);
-    });
-    translate_stack("push", [-this.cannon.cannonball_angle], (a) => {
-      ctx.rotate(a);
-    });
-
-    if (this.cannon.thread !== null) {
-      ctx.beginPath();
-      ctx.lineWidth = 5;
-      ctx.lineCap = "round";
-      ctx.strokeStyle = this.tank.color;
-      ctx.moveTo(-2.5, 0);
-      ctx.lineTo(2.5, 0);
-      ctx.stroke();
-      ctx.closePath();
-    }
-    translate_stack("pop");
-    translate_stack("pop");
-    translate_stack("pop");
     //炮管 ---------------------------
 
     translate_stack("push", [-this.cannon.angle], (a) => {
