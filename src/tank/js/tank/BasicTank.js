@@ -72,14 +72,12 @@ export class Tank {
       rotate_state: true, // 是否允许雷达旋转
       rotate_speed: angle(1), // 一帧雷达扫描1°
       turn_direction: tank_turn.left, // 下次雷达的转向
-      largest_distance: window.game_canvas.square_width * 9, // 最远扫描距离 九个单位
+      largest_distance: window.game_canvas.square_width * 8.5, // 最远扫描距离 九个单位
       darw_radar: true,
     };
 
     this.current_show_text = "";
 
-    // 存储最初位置
-    window.tank_position.set(this.tank.color, this.get_current_position());
     this.draw();
   }
 
@@ -193,7 +191,7 @@ export class Tank {
       square_height
     );
 
-    window.game_canvas.vision_origin();
+    // window.game_canvas.vision_origin();
 
     translate_stack("pop");
 
@@ -265,9 +263,6 @@ export class Tank {
     let [x_move, y_move] = this.check_hit_wall();
     this.tank.x += x_move;
     this.tank.y += y_move;
-    // 全局更新坦克坐标
-    window.tank_position.set(this.tank.color, this.get_current_position());
-
     return this.tank.speed;
   }
 
@@ -495,34 +490,33 @@ export class Tank {
    * @author: Banana
    */
   search_enemy(radian) {
-    for (let [key, value] of window.tank_position) {
-      // 排除自己的位置
-      if (key === this.tank.color) continue;
-      //TODO 敌友判断 | 跳过已经被摧毁的坦克
-
+    for (let currentTank of window.tank_list) {
+      const color = currentTank.tank.color;
       const [x, y] = this.format_position(
-        value[0],
-        value[1],
+        currentTank.tank.x,
+        currentTank.tank.y,
         this.tank.x,
         this.tank.y
       );
+
+      // 排除自己的位置
+      if (color === this.tank.color) continue;
+      //TODO 敌友判断 | 跳过已经被摧毁的坦克
       // 超越雷达范围直接退出
       const distance = Math.sqrt(x * x + y * y);
       if (distance > this.radar.largest_distance) continue;
 
-      const k = Math.tan(radian).toFixed(2);
-      const current_k = (y / x).toFixed(2); // 根据敌方坦克坐标和自身的坐标计算斜率
-
+      let k = Math.tan(radian).toFixed(2);
+      // 根据敌方坦克坐标和自身的坐标计算斜率
+      let current_k = (y / x).toFixed(2);
       // 判断雷达指向是否为敌方坦克所在的象限
-      const current_radar_quadrant = this.determine_quadrant_by_radian(
+      let current_radar_quadrant = this.determine_quadrant_by_radian(
         this.radar.angle
       );
       // 判断敌方坦克所在的象限
-      const current_enemy_quadrant = this.determine_quadrant_by_position(x, y);
+      let current_enemy_quadrant = this.determine_quadrant_by_position(x, y);
 
       // console.log("current_radar_quadrant :>> ", current_radar_quadrant);
-
-      //TODO 垂直情况未检测
 
       // console.log(
       //   "radian(k) :>> ",
@@ -539,7 +533,7 @@ export class Tank {
         parseFloat(k) + 0.29 >= current_k &&
         parseFloat(k) - 0.29 <= current_k
       ) {
-        console.log(`${this.tank.color} : find you! => ${key}`);
+        console.log(`${this.tank.color} : find you! => ${color}`);
 
         const enemy_angle = this.get_angle_slope_position(current_k, x, y);
 
@@ -551,6 +545,51 @@ export class Tank {
           this.on_scanned_robot.operation(enemy_angle);
           this.stop_scan();
         }
+        return;
+      }
+
+      // 由于垂直情况下斜率趋近于无穷，需要将其旋转90再判断
+      // 旋转90度后敌方的坐标
+      const [newx, newy] = [-y, x];
+      // 斜率加90度
+      k = Math.tan(radian + angle(90)).toFixed(2);
+      // 根据敌方坦克坐标和自身的坐标计算斜率
+      current_k = (newy / newx).toFixed(2);
+      // 判断雷达指向是否为敌方坦克所在的象限
+      current_radar_quadrant = this.determine_quadrant_by_radian(
+        this.radar.angle + angle(90)
+      );
+      // 判断敌方坦克所在的象限
+      current_enemy_quadrant = this.determine_quadrant_by_position(newx, newy);
+
+      // console.log(
+      //   `x,y ${newx},${newy}\n 传入斜率 ${k}\n 坦克之间斜率 ${current_k}\n`
+      // );
+
+      if (
+        this.check_quadrant_situation(
+          current_radar_quadrant,
+          current_enemy_quadrant
+        ) &&
+        parseFloat(k) + 0.29 >= current_k &&
+        parseFloat(k) - 0.29 <= current_k
+      ) {
+        console.log(`${this.tank.color} : find you! => ${color}`);
+
+        // 因为计算时反转了90°，得到的结果要减去90°
+        const enemy_angle =
+          this.get_angle_slope_position(current_k, newx, newy) - 90;
+
+        // 只有队列中不存在，发现敌人后尚未执行完毕的行为时，才再次添加该行为
+        const current_behaviour = this.current_behavior_execution(
+          event_priority.scannedRobot
+        );
+        if (current_behaviour === undefined) {
+          console.log("enemy_angle :>> ", enemy_angle);
+          this.on_scanned_robot.operation(enemy_angle);
+          this.stop_scan();
+        }
+        return;
       }
     }
   }
@@ -1363,12 +1402,18 @@ export class Tank {
       this.cannon.thread = null;
     }
 
-    for (let [key, value] of window.tank_position) {
+    for (let currentTank of window.tank_list) {
+      const color = currentTank.tank.color;
+      const [x, y] = this.format_position(
+        currentTank.tank.x,
+        currentTank.tank.y,
+        this.tank.x,
+        this.tank.y
+      );
       // 排除自己的位置
-      if (key === this.tank.color) continue;
+      if (color === this.tank.color) continue;
 
       // 炮弹坐标
-
       const origin_cannon_x = this.cannon.launch_x;
       const origin_cannon_y = this.cannon.launch_y;
       const current_cannon_x = this.cannon.x + this.tank.x;
@@ -1376,13 +1421,6 @@ export class Tank {
 
       // console.log("object :>> ", origin_cannon_x, origin_cannon_y);
       // console.log("object :>> ", current_cannon_x, current_cannon_y);
-
-      let [x, y] = this.format_position(
-        value[0],
-        value[1],
-        origin_cannon_x,
-        origin_cannon_y
-      );
 
       // 若炮弹距离太远就之间跳过
       // if (Math.abs(x) > 50 || Math.abs(y) > 50) continue;
@@ -1412,7 +1450,7 @@ export class Tank {
       //   左侧(${real_left_x},${real_left_y})
       //   \n右侧(${real_right_x},${real_right_y})`
       // );
-
+      //! 完全垂直的情况击中无反馈
       if (
         this.check_area_point(
           current_cannon_x,
@@ -1423,16 +1461,15 @@ export class Tank {
           real_right_y
         )
       ) {
-        console.log(this.tank.color + " 击中！=> " + key);
+        console.log(this.tank.color + " 击中！=> " + color);
         // 若是用户的坦克反馈战绩
         if (window.userTank && window.userTank.color === this.tank.color)
           window.userTank.hitNumber++;
 
-        this.hit_tank(key);
+        this.hit_tank(color);
         clearInterval(this.cannon.thread);
         this.cannon.thread = null;
       }
-      // alert(left_x, left_y, right_x, right_y);
     }
   }
 
@@ -1476,30 +1513,20 @@ export class Tank {
     this.tank.current_blood--;
 
     // 从坦克队列中去除
-    let index = 0;
-    for (const tank_item of window.tank_list) {
-      if (tank_item.tank.color == this.tank.color) {
-        window.tank_list.splice(index, 1);
-        break;
-      }
-      index++;
-    }
+    delTank(this.tank.color);
 
     // 若被摧毁的是用户的坦克，直接结束游戏
     if (window.userTank && this.tank.color === window.userTank.color) {
       window.userTank.state = tankState.fail;
       window.userTank.serviveTime = Date.now() - window.userTank.serviveTime;
     } else if (
+      window.userTank &&
       window.tank_list.length === 1 &&
       window.tank_list[0].tank.color === window.userTank.color
     ) {
       window.userTank.state = tankState.victory;
       window.userTank.serviveTime = Date.now() - window.userTank.serviveTime;
     }
-
-    // console.log("window.tank_list :>> ", window.tank_list);
-    // 从位置信息中去除
-    window.tank_position.delete(this.tank.color);
   }
 
   /**
@@ -1636,6 +1663,18 @@ export class Tank {
 // 添加坦克
 export function addTank(newTank) {
   window.tank_list.push(newTank);
+}
+
+// 从坦克列表中释放对象
+export function delTank(color) {
+  let index = 0;
+  for (const tank_item of window.tank_list) {
+    if (tank_item.tank.color == color) {
+      window.tank_list.splice(index, 1);
+      break;
+    }
+    index++;
+  }
 }
 
 // 初始化坦克列表

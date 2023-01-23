@@ -1,5 +1,5 @@
 import { Canvas } from "./js/canvas.js";
-import { checkResult } from "./js/tank/BasicTank.js";
+import { addTank, checkResult, Tank } from "./js/tank/BasicTank.js";
 // import resource_img from "./img/tank.png";
 import resource_img from "./img/tank_no_background.png";
 import { playBoomList } from "./js/utils/ControlGIF";
@@ -7,7 +7,6 @@ import { UserTank } from "./js/tank/UserTank.js";
 import { AITank } from "./js/tank/AITank.js";
 
 window.tank_img = new Image();
-window.tank_position = new Map();
 window.play_animate = true;
 window.tank_img.src = resource_img;
 window.onload = () => {
@@ -59,17 +58,17 @@ export function init_tank() {
   AITank.create();
   AITank.create();
 
-  // let tank = new Tank(600, 300, 0, 0, 0, "blue", 0);
+  // let tank = new Tank(280, 300, 90, 160, 0, "red", 0);
   // tank.run.operation = function () {
-  //   this.ahead(100);
+  //   this.radar_turn(360);
   // };
   // tank.on_scanned_robot.operation = function () {};
   // tank.on_hit_wall.operation = function () {};
   // tank.on_hit_by_bullet.operation = function () {};
   // tank.run.operation();
   // addTank(tank);
+  // addTank(new Tank(280, 400, 90, 160, 160, "blue", 0));
 
-  // addTank(new Tank(300, 300, 90, 160, 160, "red", 0));
   // window.tank_list[0].run.operation();
 
   // addTank(new Tank(300, 300, 180, 160, 160, "yellow", 0));
@@ -86,7 +85,6 @@ function animate() {
 
   if (window.play_animate && window.tank_list.length) {
     window.game_canvas.init();
-    // console.log('window.tank_position :>> ', window.tank_position);
     window.tank_list.forEach((tank_item) => {
       // console.log('object :>> ', tank_item.tank_action);
       tank_item.implement_current_operation();
