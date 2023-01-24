@@ -24,35 +24,39 @@ export const vDrag = {
       const top = parseInt(getAttr(target, "top"));
 
       // 分别计算四个方向的边界值
-      const minLeft =
-        target.offsetLeft + parseInt(getAttr(target, "width")) - 50;
       const maxLeft =
-        parseInt(getAttr(document.body, "width")) - target.offsetLeft - 50;
-      const minTop = target.offsetTop;
+        parseInt(getAttr(document.body, "width")) -
+        parseInt(getAttr(target, "width")) -
+        25;
+
       const maxTop =
         parseInt(getAttr(document.body, "height")) -
-        target.offsetTop -
-        parseInt(getAttr(header, "height"));
+        parseInt(getAttr(target, "height")) -
+        45;
+
+      console.log("object :>> ", maxLeft, maxTop);
 
       document.onmousemove = (event) => {
         // 鼠标移动时计算每次移动的距离，并改变拖拽元素的定位
         const disX = event.clientX - currentX;
         const disY = event.clientY - currentY;
 
-        // 判断左、右边界
-        if (disX < 0 && disX <= -minLeft) {
-          target.style.left = `${left - minLeft}px`;
-        } else if (disX > 0 && disX >= maxLeft) {
-          target.style.left = `${left + maxLeft}px`;
+        if (left + disX < 0) {
+          // 吸附左侧
+          target.style.left = `0px`;
+        } else if (left + disX >= maxLeft) {
+          // 吸附右侧
+          target.style.left = `${maxLeft}px`;
         } else {
           target.style.left = `${left + disX}px`;
         }
 
-        // 判断上、下边界
-        if (disY < 0 && disY <= -minTop) {
-          target.style.top = `${top - minTop}px`;
-        } else if (disY > 0 && disY >= maxTop) {
-          target.style.top = `${top + maxTop}px`;
+        if (top + disY <= 0) {
+          // 吸附顶部
+          target.style.top = `0px`;
+        } else if (top + disY >= maxTop) {
+          // 吸附底部
+          target.style.top = `${maxTop}px`;
         } else {
           target.style.top = `${top + disY}px`;
         }
