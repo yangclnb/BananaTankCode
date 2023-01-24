@@ -443,13 +443,20 @@ export class Tank {
     // 偏移量
     const offset_distance = window.game_canvas.average_length_width / 2;
 
-    // y = 0 情况下单独计算
+    // 弹道为 y=0 x=0 情况下单独计算
     if (y === 0) {
       return [
         x - offset_distance,
         offset_distance,
         x + offset_distance,
         -offset_distance,
+      ];
+    } else if (x === 0) {
+      return [
+        offset_distance,
+        y - offset_distance,
+        -offset_distance,
+        y + offset_distance,
       ];
     }
 
@@ -771,10 +778,8 @@ export class Tank {
         // this.cannon_turn(70);
         this.cannon_turn(enemy_angle - cannon_angle);
         this.fire();
-        console.log(
-          "this.action_queues :>> ",
-          JSON.stringify(this.action_queue)
-        );
+      } else {
+        this.say("装填中...");
       }
       this.continual_scan();
     },
@@ -1383,6 +1388,16 @@ export class Tank {
    * @author: Banana
    */
   cannon_move() {
+    // 超过屏幕范围清空线程
+    if (
+      this.cannon.x > window.game_canvas.width ||
+      this.cannon.y > window.game_canvas.height
+    ) {
+      clearInterval(this.cannon.thread);
+      this.cannon.thread = null;
+      return;
+    }
+
     // console.log("object :>> ", this.cannon.x, this.cannon.y);
     let [x_move, y_move] = this.compute_quadrant(
       this.cannon.launch_speed,
@@ -1393,31 +1408,24 @@ export class Tank {
     this.cannon.y += y_move;
     // console.log("x_move,y_move :>> ", x_move, y_move);
 
-    // 超过屏幕范围清空线程
-    if (
-      this.cannon.x > window.game_canvas.width ||
-      this.cannon.y > window.game_canvas.height
-    ) {
-      clearInterval(this.cannon.thread);
-      this.cannon.thread = null;
-    }
-
     for (let currentTank of window.tank_list) {
       const color = currentTank.tank.color;
-      const [x, y] = this.format_position(
-        currentTank.tank.x,
-        currentTank.tank.y,
-        this.tank.x,
-        this.tank.y
-      );
       // 排除自己的位置
       if (color === this.tank.color) continue;
 
       // 炮弹坐标
       const origin_cannon_x = this.cannon.launch_x;
       const origin_cannon_y = this.cannon.launch_y;
-      const current_cannon_x = this.cannon.x + this.tank.x;
-      const current_cannon_y = this.cannon.y + this.tank.y;
+      const current_cannon_x = this.cannon.x + origin_cannon_x;
+      const current_cannon_y = this.cannon.y + origin_cannon_y;
+      const [x, y] = this.format_position(
+        currentTank.tank.x,
+        currentTank.tank.y,
+        origin_cannon_x,
+        origin_cannon_y
+      );
+
+      console.log("x,y :>> ", x, y);
 
       // console.log("object :>> ", origin_cannon_x, origin_cannon_y);
       // console.log("object :>> ", current_cannon_x, current_cannon_y);
@@ -1437,19 +1445,19 @@ export class Tank {
       const real_right_x = right_x + origin_cannon_x;
       const real_right_y = origin_cannon_y - right_y;
 
-      // window.game_canvas.vision_position(real_left_x, real_left_y, "red");
-      // window.game_canvas.vision_position(real_right_x, real_right_y, "gold");
-      // window.game_canvas.vision_position(
-      //   origin_cannon_x,
-      //   origin_cannon_y,
-      //   "black"
-      // );
+      window.game_canvas.vision_position(real_left_x, real_left_y, "red");
+      window.game_canvas.vision_position(real_right_x, real_right_y, "gold");
+      window.game_canvas.vision_position(
+        origin_cannon_x,
+        origin_cannon_y,
+        "black"
+      );
 
-      // console.log(
-      //   `炮弹(${origin_cannon_x},${origin_cannon_y}) \n
-      //   左侧(${real_left_x},${real_left_y})
-      //   \n右侧(${real_right_x},${real_right_y})`
-      // );
+      console.log(
+        `炮弹(${origin_cannon_x},${origin_cannon_y}) \n
+        左侧(${real_left_x},${real_left_y})
+        \n右侧(${real_right_x},${real_right_y})`
+      );
       //! 完全垂直的情况击中无反馈
       if (
         this.check_area_point(
