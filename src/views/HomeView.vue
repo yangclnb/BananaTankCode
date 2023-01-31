@@ -28,6 +28,7 @@ const startAndStop = () => {
 };
 
 onMounted(() => {
+  document.title = "TankCode | 主页";
   startAnimate();
   init_canvas();
 });

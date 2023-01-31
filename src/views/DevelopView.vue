@@ -6,6 +6,7 @@ import hljs from "highlight.js";
 
 import "github-markdown-css";
 import "highlight.js/styles/atom-one-dark-reasonable.css";
+import { onMounted } from "vue";
 
 const md = new MarkdownIt({
   highlight: function (str, lang) {
@@ -21,6 +22,8 @@ const md = new MarkdownIt({
   },
 });
 const result = md.render(mdFile);
+
+onMounted(() => (document.title = "TankCode | 开发文档"));
 </script>
 
 <template>

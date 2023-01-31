@@ -1,7 +1,7 @@
 <script setup>
 import HeadPart from "../components/HeadPart.vue";
 import { ElTable, ElTableColumn, ElButton } from "element-plus";
-import { reactive } from "vue";
+import { onMounted, reactive } from "vue";
 
 let tableData = reactive([
   {
@@ -13,6 +13,8 @@ let tableData = reactive([
 ]);
 
 function toChallenge() {}
+
+onMounted(() => (document.title = "TankCode | 排行榜"));
 </script>
 
 <template>

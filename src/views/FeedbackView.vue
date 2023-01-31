@@ -1,6 +1,9 @@
 <script setup>
 import HeadPart from "../components/HeadPart.vue";
 import { ElForm, ElFormItem, ElButton, ElSelect, ElOption } from "element-plus";
+import { onMounted } from "vue";
+
+onMounted(() => (document.title = "TankCode | 消息反馈"));
 </script>
 
 <template>
