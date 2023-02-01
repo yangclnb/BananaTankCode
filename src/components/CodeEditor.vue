@@ -8,7 +8,7 @@ import { storeToRefs } from "pinia";
 import { useTankStatusStore } from "../stores/tankStatus";
 import { UserTank } from "@/tank/js/tank/UserTank.js";
 import { AITank } from "@/tank/js/tank/AITank.js";
-import { simplyVal } from "@/tank/js/tank/tankMoveTemplate.js";
+import { simplyVal } from "@/template/UserCode.js";
 const store = useConsoleDisplayStore();
 const { state } = storeToRefs(store);
 
