@@ -24,7 +24,6 @@ let currentAnimateState = ref("暂停");
 const startAndStop = () => {
   window.play_animate ? stopAnimate() : startAnimate();
   currentAnimateState.value = window.play_animate ? "暂停" : "开始";
-  console.log("currentAnimateState :>> ", currentAnimateState);
 };
 
 onMounted(() => {

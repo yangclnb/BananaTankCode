@@ -1,7 +1,7 @@
 import { tankState } from "../EnumObject.js";
 import { getQuadrantCorner } from "../utils/utils.js";
-import { Tank, addTank, initTankList } from "./BasicTank.js";
-
+import { Tank, addTank } from "./BasicTank.js";
+import { initTankList } from "../../main.js";
 export class UserTank {
   /**
    * @function: creat

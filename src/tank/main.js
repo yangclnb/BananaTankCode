@@ -2,23 +2,33 @@ import { Canvas } from "./js/canvas.js";
 import { addTank, checkResult, Tank } from "./js/tank/BasicTank.js";
 // import resource_img from "./img/tank.png";
 import resource_img from "./img/tank_no_background.png";
-import { playBoomList } from "./js/utils/ControlGIF";
+import { GIF } from "./js/utils/ControlGIF";
 import { UserTank } from "./js/tank/UserTank.js";
 import { AITank } from "./js/tank/AITank.js";
 
-window.tank_img = new Image();
 window.play_animate = true;
+
+window.tank_img = new Image();
 window.tank_img.src = resource_img;
 window.onload = () => {
   init();
 };
+
+// 初始化坦克列表
+export let tankList = [];
+// 初始化坦克列表
+export function initTankList() {
+  tankList = [];
+}
+// 初始化canvas类
+export let canvas;
 
 /**
  * @function: init
  * @description: 全局初始化
  * @author: Banana
  */
-export function init() {
+function init() {
   init_canvas();
   init_tank();
   animate();
@@ -26,13 +36,8 @@ export function init() {
 
 export function init_canvas() {
   let canvasElement = document.querySelector("#main_canvas");
-  window.game_canvas = new Canvas(canvasElement);
-  console.log(
-    "单格大小 :>> ",
-    window.game_canvas.square_width,
-    ", ",
-    window.game_canvas.square_height
-  );
+  canvas = new Canvas(canvasElement);
+  console.log("单格大小 :>> ", canvas.square_width, ", ", canvas.square_height);
 }
 
 /**
@@ -40,8 +45,8 @@ export function init_canvas() {
  * @description: 初始化坦克
  * @author: Banana
  */
-export function init_tank() {
-  window.tank_list = [];
+function init_tank() {
+  tankList = [];
 
   // UserTank.create(
   //   { color: "blue", initDirection: 0, initPosition: 2 },
@@ -58,20 +63,36 @@ export function init_tank() {
   AITank.create();
   AITank.create();
 
-  // let tank = new Tank(280, 300, 90, 160, 0, "red", 0);
+  // let tank = new Tank(280, 300, 90, 0, 0, "red", 0);
   // tank.run.operation = function () {
-  //   this.radar_turn(360);
+  //   this.cannon_turn(-90);
+  //   this.fire();
   // };
-  // tank.on_scanned_robot.operation = function () {};
-  // tank.on_hit_wall.operation = function () {};
-  // tank.on_hit_by_bullet.operation = function () {};
+
+  // tank.on_scanned_robot.operation = function (enemy_angle) {
+  //   if (
+  //     this.get_cannnon_reload_time() <=
+  //     Date.now() - this.get_last_launch_time()
+  //   ) {
+  //     this.say("我发现你了~");
+  //     const cannon_angle = this.get_current_cannon_angle();
+  //     console.log("enemy_angle,cannon_angle :>> ", enemy_angle, cannon_angle);
+  // this.cannon_turn(70);
+  //     this.cannon_turn(enemy_angle - cannon_angle);
+  //     this.fire();
+  // this.ahead(200);
+  //   } else {
+  //     this.say("装填中...");
+  //   }
+  //   this.continual_scan();
+  // };
   // tank.run.operation();
   // addTank(tank);
   // addTank(new Tank(280, 400, 90, 160, 160, "blue", 0));
 
-  // window.tank_list[0].run.operation();
+  // self.tank_list[0].run.operation();
 
-  // addTank(new Tank(300, 300, 180, 160, 160, "yellow", 0));
+  // addTank(new Tank(10, 260, 180, 160, 160, "yellow", 0));
   // addTank(new Tank(0, 300, 180, 160, 160, "green", 0));
 }
 
@@ -81,17 +102,15 @@ export function init_tank() {
  * @author: Banana
  */
 function animate() {
-  //TODO 判断用户坦克状态 是胜利或失败执行对应的动画 然后return
-
-  if (window.play_animate && window.tank_list.length) {
-    window.game_canvas.init();
-    window.tank_list.forEach((tank_item) => {
+  if (window.play_animate && tankList.length) {
+    canvas.init();
+    tankList.forEach((tank_item) => {
       // console.log('object :>> ', tank_item.tank_action);
       tank_item.implement_current_operation();
       tank_item.draw();
     });
     // 播放爆炸动画
-    playBoomList();
+    GIF.play();
     // 判断用户是否胜利
     checkResult();
   }

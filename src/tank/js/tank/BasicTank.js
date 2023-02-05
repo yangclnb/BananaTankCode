@@ -1,4 +1,4 @@
-import { playBoom } from "../utils/ControlGIF.js";
+import { GIF } from "../utils/ControlGIF.js";
 import {
   map_faction_position,
   tank_action,
@@ -8,8 +8,7 @@ import {
   tankState,
 } from "../EnumObject.js";
 import { angle, classify_radian, radian } from "../utils/utils.js";
-
-window.tank_list = [];
+import { tankList, canvas, initTankList } from "../../main.js";
 
 export class Tank {
   action_queue = new Array(); // 行为队列
@@ -72,7 +71,7 @@ export class Tank {
       rotate_state: true, // 是否允许雷达旋转
       rotate_speed: angle(1), // 一帧雷达扫描1°
       turn_direction: tank_turn.left, // 下次雷达的转向
-      largest_distance: window.game_canvas.square_width * 8.5, // 最远扫描距离 九个单位
+      largest_distance: canvas.square_width * 8.5, // 最远扫描距离 九个单位
       darw_radar: true,
     };
 
@@ -87,169 +86,27 @@ export class Tank {
    * @author: Banana
    */
   draw() {
-    //TODO 拆分成部分组件
-    const canvas = window.game_canvas.canvas;
-    const translate_stack = window.game_canvas.translate_stack();
-    const ctx = window.game_canvas.ctx;
-    const square_width = window.game_canvas.square_width;
-    const square_height = window.game_canvas.square_height;
+    const square_width = canvas.square_width;
 
-    // 炮弹 ---------------------
-    //! 不能依靠坦克本身的坐标作为绘制依据
-    translate_stack(
-      "push",
-      [this.cannon.launch_x, this.cannon.launch_y],
-      (a, b) => {
-        ctx.translate(a, b);
-      }
-    );
-    // 初始角度调整为 y=kx 与 x 轴正方向的夹角
-    translate_stack("push", [-angle(90)], (a) => {
-      ctx.rotate(a);
-    });
-    translate_stack("push", [angle(90)], (a) => {
-      ctx.rotate(a);
-    });
-    translate_stack("push", [this.cannon.x, this.cannon.y], (a, b) => {
-      ctx.translate(a, b);
-    });
-    translate_stack("push", [-this.cannon.cannonball_angle], (a) => {
-      ctx.rotate(a);
-    });
+    canvas.render.bullet(this.cannon);
 
-    if (this.cannon.thread !== null) {
-      ctx.beginPath();
-      ctx.lineWidth = 5;
-      ctx.lineCap = "round";
-      ctx.strokeStyle = this.tank.color;
-      ctx.moveTo(-2.5, 0);
-      ctx.lineTo(2.5, 0);
-      ctx.stroke();
-      ctx.closePath();
-    }
-    translate_stack("pop");
-    translate_stack("pop");
-    translate_stack("pop");
-    translate_stack("pop");
-    translate_stack("pop");
-    translate_stack("pop");
+    canvas.render.tank(this.tank);
 
-    // console.log("square width and height:>> ", square_width, square_height);
-    ctx.beginPath();
+    canvas.render.text(this.current_show_text, this.tank.x, this.tank.y);
 
-    translate_stack("push", [this.tank.x, this.tank.y], (a, b) => {
-      ctx.translate(a, b);
-    });
-
-    // 初始角度调整为 y=kx 与 x 轴正方向的夹角
-    translate_stack("push", [-angle(90)], (a) => {
-      ctx.rotate(a);
-    });
-
-    // 显示文字 ------------------------
-
-    translate_stack("push", [angle(90)], (a) => {
-      ctx.rotate(a);
-    });
-    ctx.direction = "ltr"; // 文本方向从左向右
-    ctx.font = "15px serif"; // 设置文案大小和字体
-    ctx.textAlign = "center";
-    ctx.fillStyle = "#D8DFEA";
-    ctx.lineCap = "round";
-    ctx.fillText(this.current_show_text, 0, -40);
-    translate_stack("pop");
-
-    // 绘制血条 -------------------------
     const blood =
       (this.tank.current_blood / this.tank.all_blood) * square_width;
-    if (blood !== 0) {
-      translate_stack("push", [30, -17], (a, b) => {
-        ctx.translate(a, b);
-      });
-      ctx.moveTo(0, 0);
-      ctx.lineTo(0, blood);
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = "green";
-      ctx.stroke();
-      translate_stack("pop");
-    }
+    canvas.render.blood(blood, this.tank.x, this.tank.y);
 
-    // 坦克  ---------------------------
-
-    translate_stack("push", [-this.tank.angle], (a) => {
-      ctx.rotate(a);
-    });
-    ctx.drawImage(
-      window.tank_img,
-      map_faction_position[this.tank.color].x,
-      map_faction_position[this.tank.color].y,
-      40,
-      40,
-      -(square_width / 2),
-      -(square_height / 2),
-      square_width,
-      square_height
+    canvas.render.radar(
+      this.radar.angle,
+      this.radar.largest_distance,
+      this.tank.x,
+      this.tank.y,
+      this.radar.darw_radar
     );
 
-    // window.game_canvas.vision_origin();
-
-    translate_stack("pop");
-
-    // 雷达 ---------------------------
-
-    if (this.radar.darw_radar) {
-      translate_stack(
-        "push",
-        [angle(90) - this.radar.angle - angle(7.5)],
-        (a) => {
-          ctx.rotate(a);
-        }
-      );
-      var gradient = ctx.createLinearGradient(
-        0,
-        0,
-        this.radar.largest_distance,
-        10
-      );
-      gradient.addColorStop(0, "rgba(17,153,142,0.5)");
-      gradient.addColorStop(1, "rgba(53,125,195, 0)");
-      ctx.beginPath();
-      ctx.fillStyle = gradient;
-      ctx.moveTo(this.radar.largest_distance, 0);
-      ctx.lineTo(0, 0);
-      translate_stack("push", [angle(15)], (a) => {
-        ctx.rotate(a);
-      });
-      ctx.lineTo(this.radar.largest_distance, 0);
-      ctx.fill();
-      ctx.closePath();
-
-      translate_stack("pop");
-      translate_stack("pop");
-    }
-
-    //炮管 ---------------------------
-
-    translate_stack("push", [-this.cannon.angle], (a) => {
-      ctx.rotate(a);
-    });
-
-    ctx.drawImage(
-      window.tank_img,
-      map_faction_position.cannon.x,
-      map_faction_position.cannon.y,
-      11,
-      40,
-      -5.5,
-      0,
-      11,
-      40
-    );
-
-    translate_stack("pop");
-
-    translate_stack("pop");
-    translate_stack("pop");
+    canvas.render.cannon(this.cannon.angle, this.tank.x, this.tank.y);
   }
 
   /**
@@ -278,10 +135,10 @@ export class Tank {
       this.tank.angle,
       this.tank.move_direction
     );
-    const square_width = window.game_canvas.square_width;
-    const square_height = window.game_canvas.square_height;
-    const canvas_width = window.game_canvas.canvas.width;
-    const canvas_height = window.game_canvas.canvas.height;
+    const square_width = canvas.square_width;
+    const square_height = canvas.square_height;
+    const canvas_width = canvas.canvas.width;
+    const canvas_height = canvas.canvas.height;
     if (
       this.tank.x >= square_width / 2 &&
       this.tank.x <= canvas_width - square_width / 2
@@ -441,7 +298,7 @@ export class Tank {
   get_tank_collision_volume(x, y, collision_value) {
     let left_y, left_x, right_x, right_y;
     // 偏移量
-    const offset_distance = window.game_canvas.average_length_width / 2;
+    const offset_distance = canvas.average_length_width / 2;
 
     // 弹道为 y=0 x=0 情况下单独计算
     if (y === 0) {
@@ -497,7 +354,7 @@ export class Tank {
    * @author: Banana
    */
   search_enemy(radian) {
-    for (let currentTank of window.tank_list) {
+    for (let currentTank of tankList) {
       const color = currentTank.tank.color;
       const [x, y] = this.format_position(
         currentTank.tank.x,
@@ -1389,10 +1246,7 @@ export class Tank {
    */
   cannon_move() {
     // 超过屏幕范围清空线程
-    if (
-      this.cannon.x > window.game_canvas.width ||
-      this.cannon.y > window.game_canvas.height
-    ) {
+    if (this.cannon.x > canvas.width || this.cannon.y > canvas.height) {
       clearInterval(this.cannon.thread);
       this.cannon.thread = null;
       return;
@@ -1408,7 +1262,7 @@ export class Tank {
     this.cannon.y += y_move;
     // console.log("x_move,y_move :>> ", x_move, y_move);
 
-    for (let currentTank of window.tank_list) {
+    for (let currentTank of tankList) {
       const color = currentTank.tank.color;
       // 排除自己的位置
       if (color === this.tank.color) continue;
@@ -1445,13 +1299,9 @@ export class Tank {
       const real_right_x = right_x + origin_cannon_x;
       const real_right_y = origin_cannon_y - right_y;
 
-      window.game_canvas.vision_position(real_left_x, real_left_y, "red");
-      window.game_canvas.vision_position(real_right_x, real_right_y, "gold");
-      window.game_canvas.vision_position(
-        origin_cannon_x,
-        origin_cannon_y,
-        "black"
-      );
+      canvas.vision_position(real_left_x, real_left_y, "red");
+      canvas.vision_position(real_right_x, real_right_y, "gold");
+      canvas.vision_position(origin_cannon_x, origin_cannon_y, "black");
 
       console.log(
         `炮弹(${origin_cannon_x},${origin_cannon_y}) \n
@@ -1488,10 +1338,10 @@ export class Tank {
    * @author: Banana
    */
   hit_tank(tank_color) {
-    for (const tank_item of window.tank_list) {
+    for (const tank_item of tankList) {
       if (tank_item.tank.color == tank_color) {
         // 触发爆炸动画
-        playBoom(tank_item.tank.x, tank_item.tank.y);
+        GIF.addEvent(tank_item.tank.x, tank_item.tank.y);
         tank_item.get_hit();
         return;
       }
@@ -1529,8 +1379,8 @@ export class Tank {
       window.userTank.serviveTime = Date.now() - window.userTank.serviveTime;
     } else if (
       window.userTank &&
-      window.tank_list.length === 1 &&
-      window.tank_list[0].tank.color === window.userTank.color
+      tankList.length === 1 &&
+      tankList[0].tank.color === window.userTank.color
     ) {
       window.userTank.state = tankState.victory;
       window.userTank.serviveTime = Date.now() - window.userTank.serviveTime;
@@ -1639,7 +1489,7 @@ export class Tank {
     // const min_y = Math.min(area_left_y, area_right_y);
     // if (min_y <= check_y && check_y <= max_y) return true;
     // else return false;
-    const offset_distance = window.game_canvas.average_length_width / 2;
+    const offset_distance = canvas.average_length_width / 2;
 
     // 检查左右区间的位置情况，判断击中检测是以x还是y + offset_distance
     if (
@@ -1670,24 +1520,19 @@ export class Tank {
 
 // 添加坦克
 export function addTank(newTank) {
-  window.tank_list.push(newTank);
+  tankList.push(newTank);
 }
 
 // 从坦克列表中释放对象
 export function delTank(color) {
   let index = 0;
-  for (const tank_item of window.tank_list) {
+  for (const tank_item of tankList) {
     if (tank_item.tank.color == color) {
-      window.tank_list.splice(index, 1);
+      tankList.splice(index, 1);
       break;
     }
     index++;
   }
-}
-
-// 初始化坦克列表
-export function initTankList() {
-  window.tank_list = [];
 }
 
 // window.userTank = {
@@ -1701,7 +1546,7 @@ export function initTankList() {
 export function checkResult() {
   if (!window.userTank) return;
 
-  // console.log("window.tank_list :>> ", window.tank_list);
+  // console.log("tankList :>> ", tankList);
 
   // 判断用户的坦克是否为 胜利或失败 的状态
   if (
@@ -1709,7 +1554,7 @@ export function checkResult() {
     window.userTank.state === tankState.victory
   ) {
     initTankList();
-    window.game_canvas.settlementPage(window.userTank);
+    canvas.settlementPage(window.userTank);
     console.log("object :>> ", window.userTank);
     window.userTank = undefined;
   }

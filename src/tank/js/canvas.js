@@ -1,6 +1,6 @@
 import { map_faction_position, map_color_scheme } from "./EnumObject.js";
 import { Tank } from "./tank/BasicTank.js";
-import { formatString } from "./utils/utils.js";
+import { formatString, angle } from "./utils/utils.js";
 
 export class Canvas {
   constructor(canvasElement) {
@@ -113,11 +113,32 @@ export class Canvas {
         });
         return current_operation.func(...current_operation.argu_list);
       } else if (operation === "push") {
-        operation_stack.push({ func, argu_list });
+        operation_stack.push({
+          func,
+          argu_list,
+        });
         return func(...argu_list);
       }
     };
   }
+
+  // 柯里化绘制控制函数
+  actionStack = this.translate_stack();
+
+  // 当前绘制中心移至 x，y 处
+  translate = (x, y) =>
+    this.actionStack("push", [x, y], (a, b) => {
+      this.ctx.translate(a, b);
+    });
+
+  // 当前旋转角度调整为 angle
+  rotate = (angle) =>
+    this.actionStack("push", [angle], (a) => {
+      this.ctx.rotate(a);
+    });
+
+  // 弹出上一次的绘制信息，避免影响以后的绘制
+  popTransformation = () => this.actionStack("pop");
 
   /**
    * @function: vision_origin
@@ -140,10 +161,7 @@ export class Canvas {
    * @author: Banana
    */
   vision_position(x, y, color) {
-    let stack = this.translate_stack();
-    stack("push", [x, y], (a, b) => {
-      this.ctx.translate(a, b);
-    });
+    this.translate(x, y);
     this.ctx.beginPath();
     this.ctx.lineWidth = 10;
     this.ctx.strokeStyle = color;
@@ -151,7 +169,7 @@ export class Canvas {
     this.ctx.lineTo(10, 0);
     this.ctx.stroke();
     this.ctx.closePath();
-    stack("pop");
+    this.popTransformation();
   }
 
   /**
@@ -216,4 +234,129 @@ export class Canvas {
       (originalTextPosition += 50)
     );
   }
+
+  render = {
+    tank: (tankData) => {
+      this.ctx.beginPath();
+
+      this.translate(tankData.x, tankData.y);
+      this.rotate(-angle(90));
+      this.rotate(-tankData.angle);
+
+      this.ctx.drawImage(
+        window.tank_img,
+        map_faction_position[tankData.color].x,
+        map_faction_position[tankData.color].y,
+        40,
+        40,
+        -(this.square_width / 2),
+        -(this.square_height / 2),
+        this.square_width,
+        this.square_height
+      );
+
+      this.popTransformation();
+      this.popTransformation();
+      this.popTransformation();
+    },
+    // 绘制雷达
+    radar: (currentAngle, distance, x, y, show = true) => {
+      if (!show) return;
+      this.translate(x, y);
+      this.rotate(-angle(90));
+      this.rotate(angle(90) - currentAngle - angle(7.5));
+
+      var gradient = this.ctx.createLinearGradient(0, 0, distance, 10);
+      gradient.addColorStop(0, "rgba(17,153,142,0.5)");
+      gradient.addColorStop(1, "rgba(53,125,195, 0)");
+      this.ctx.beginPath();
+      this.ctx.fillStyle = gradient;
+      this.ctx.moveTo(distance, 0);
+      this.ctx.lineTo(0, 0);
+      this.rotate(angle(15));
+      this.ctx.lineTo(distance, 0);
+      this.ctx.fill();
+      this.ctx.closePath();
+
+      this.popTransformation();
+      this.popTransformation();
+      this.popTransformation();
+      this.popTransformation();
+    },
+    // 绘制炮管
+    cannon: (currentAngle, x, y) => {
+      this.translate(x, y);
+      this.rotate(-angle(90));
+      this.rotate(-currentAngle);
+
+      this.ctx.drawImage(
+        window.tank_img,
+        map_faction_position.cannon.x,
+        map_faction_position.cannon.y,
+        11,
+        40,
+        -5.5,
+        0,
+        11,
+        40
+      );
+
+      this.popTransformation();
+      this.popTransformation();
+      this.popTransformation();
+    },
+    // 绘制子弹
+    bullet: (cannonData) => {
+      if (cannonData.thread === null) return;
+
+      this.translate(cannonData.launch_x, cannonData.launch_y);
+      this.translate(cannonData.x, cannonData.y);
+      this.rotate(-cannonData.cannonball_angle);
+
+      this.ctx.beginPath();
+      this.ctx.lineWidth = 5;
+      this.ctx.lineCap = "round";
+      this.ctx.strokeStyle = "yellow";
+      this.ctx.moveTo(-2.5, 0);
+      this.ctx.lineTo(2.5, 0);
+      this.ctx.stroke();
+      this.ctx.closePath();
+
+      this.popTransformation();
+      this.popTransformation();
+      this.popTransformation();
+    },
+    // 绘制血条
+    blood: (currentBlood, x, y) => {
+      if (currentBlood === 0) return;
+
+      this.translate(x, y);
+      this.rotate(-angle(90));
+      this.translate(30, -17);
+
+      this.ctx.moveTo(0, 0);
+      this.ctx.lineTo(0, currentBlood);
+      this.ctx.lineWidth = 2;
+      this.ctx.strokeStyle = "green";
+      this.ctx.stroke();
+
+      this.popTransformation();
+      this.popTransformation();
+      this.popTransformation();
+    },
+    // 绘制文本
+    text: (text, x, y) => {
+      if (text === "") return;
+      this.translate(x, y);
+
+      this.ctx.direction = "ltr"; // 文本方向从左向右
+      this.ctx.font = "15px serif"; // 设置文案大小和字体
+      this.ctx.textAlign = "center";
+      this.ctx.fillStyle = "#D8DFEA";
+      this.ctx.lineCap = "round";
+      this.ctx.fillText(text, 0, -40);
+
+      this.popTransformation();
+    },
+  };
 }

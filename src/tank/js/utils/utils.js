@@ -1,3 +1,5 @@
+import { canvas } from "../../main.js";
+
 /**
  * @function: angle
  * @description: 根据输入的角度转化为弧度
@@ -81,8 +83,6 @@ export function numMinus(num1, num2) {
  * @author: Banana
  */
 export function getQuadrantCorner(quadrant) {
-  const canvas = window.game_canvas;
-
   switch (quadrant) {
     case 1:
       return [canvas.width - canvas.square_width - 10, 5];
@@ -107,8 +107,6 @@ export function getQuadrantCorner(quadrant) {
  * @author: Banana
  */
 export function getQuadrantByPosition(x, y) {
-  const canvas = window.game_canvas;
-
   if (x > canvas.width / 2) {
     if (y > canvas.height / 2) return 4;
     else return 1;
@@ -124,9 +122,9 @@ export function getQuadrantByPosition(x, y) {
  * @return {*}
  * @author: Banana
  */
-export function getSparePosition() {
+export function getSparePosition(tankList) {
   let position = [false, false, false, false];
-  window.tank_list.map((item) => {
+  tankList.map((item) => {
     position[getQuadrantByPosition(item.tank.x, item.tank.y) - 1] = true;
   });
   const spareVal = position.findIndex((val) => val === false);
@@ -139,11 +137,11 @@ export function getSparePosition() {
  * @return {*}
  * @author: Banana
  */
-export function getSpareColor() {
+export function getSpareColor(tankList) {
   const currentColor = { red: 0, blue: 1, green: 2, yellow: 3 };
   const currentIndexColor = { 0: "red", 1: "blue", 2: "green", 3: "yellow" };
   let temp = [false, false, false, false];
-  window.tank_list.map((item) => {
+  tankList.map((item) => {
     temp[currentColor[item.tank.color]] = true;
   });
   return currentIndexColor[temp.findIndex((val) => val === false)];

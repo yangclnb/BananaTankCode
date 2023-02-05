@@ -3,7 +3,8 @@ import {
   getSparePosition,
   getSpareColor,
 } from "../utils/utils.js";
-import { Tank, addTank, initTankList } from "./BasicTank.js";
+import { tankList } from "../../main.js";
+import { Tank, addTank } from "./BasicTank.js";
 
 export class AITank {
   /**
@@ -14,9 +15,9 @@ export class AITank {
    */
   static create() {
     //TODO 遍历坦克list 获取还未被占据的出生点象限和坦克颜色
-    const position = getSparePosition();
+    const position = getSparePosition(tankList);
     // console.log("空闲的位置 :>> ", position);
-    const color = getSpareColor();
+    const color = getSpareColor(tankList);
     // console.log("空闲的颜色 :>> ", color);
 
     // 初始化位置

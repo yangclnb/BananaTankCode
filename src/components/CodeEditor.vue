@@ -43,8 +43,6 @@ function updateTankCheck() {
       // 判断当前游戏模式
       if (mode.value === "console") {
         UserTank.executeUserCode(value);
-
-        // console.log("window.tank_list :>> ", window.tank_list);
       } else if (mode.value === "pve") {
         UserTank.executeUserCode(value);
         AITank.create();
