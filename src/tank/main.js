@@ -84,7 +84,7 @@ function init_tank() {
   //   } else {
   //     this.say("装填中...");
   //   }
-  //   this.continual_scan();
+  //   this.continualScan();
   // };
   // tank.run.operation();
   // addTank(tank);
@@ -104,10 +104,9 @@ function init_tank() {
 function animate() {
   if (window.play_animate && tankList.length) {
     canvas.init();
-    tankList.forEach((tank_item) => {
-      // console.log('object :>> ', tank_item.tank_action);
-      tank_item.implement_current_operation();
-      tank_item.draw();
+    tankList.forEach((tankItem) => {
+      tankItem.implement_current_operation();
+      tankItem.draw();
     });
     // 播放爆炸动画
     GIF.play();

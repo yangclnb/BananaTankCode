@@ -2,6 +2,9 @@
 
 🪖一款基于 **ES6 + canvas** 的坦克对战平台，其区别于传统的坦克大战的主要因素在于并非通过玩家的键鼠控制坦克的各种行为，而是通过代码执行各种函数从而实现控制坦克在特定的事件触发时按照玩家的代码让坦克执行特定的操作。在这个过程中玩家可以更好的了解 **ES6** 中的语法以及新特性，从而达到学习的目的。
 
+
+
+
 ## 坐标系
 
 在正式开始驾驶我们的坦克之前，让我们先了解一下 *BananaCodeTank* 中的坐标系
@@ -14,7 +17,7 @@
 想要初始化坦克非常简单，只需要调用`UserTank.create()`方法即可，其中需要的参数有以下几项
 ``` javascript
 // tank的运动方法
-const run = function () {
+const run = ()=> {
 };
 
 /* 发现敌人时触发
@@ -24,11 +27,11 @@ const scannedRobot = function(enemy_angle){
 }
 
 // 撞墙时触发
-const hitWall = function(){
+const hitWall = ()=>{
 }
 
 // 被击中时触发
-const hitByBullet = function(){
+const hitByBullet = ()=>{
 }
 
 // 初始化配置
@@ -54,19 +57,20 @@ UserTank.create(
 ``` javascript
 // 初始化配置
 const options = {
-  color: "red", //坦克颜色
+  color: "red", // 坦克颜色 red | green | blue | yellow
   initDirection: 230, // 坦克初始朝向，输入角度
-  initPosition: 1, //初始位置，按照象限划分
+  initPosition: 1, // 初始位置，按照象限划分
+  loopRun: false, // 是否循环执行run函数
 };
 ```
 
 ### run
 初始化坦克传入的第二个参数是`run`函数，其主要的作用是让我们的坦克在为触发任何事件时控制其进行活动，因在一系列事件的优先级中`run`的优先级是最低的。接下来我们看一个该函数的实例。
 ```javascript
-const run = function () {
-  this.ahead(400);  // 向前移动400个单位
-  this.tank_turn(-45); // 坦克自身向右旋转45°
-  this.back(400) // 向后移动400个单位
+const run = ()=> {
+  ahead(400);  // 向前移动400个单位
+  tankTurn(-45); // 坦克自身向右旋转45°
+  back(400) // 向后移动400个单位
 };
 ```
 在以上的实例中，我们的坦克的运动轨迹是**先向前移动400个单位，接着坦克自身向右旋转45°，最后向后移动400个单位**
@@ -75,24 +79,24 @@ const run = function () {
 初始化坦克传入的第二个参数是`scannedRobot`函数，顾名思义，它的出现是为了让我们可以在坦克的 *雷达扫描到敌方单位后* 可以进行一系列我们预设的行为。同样我们可以看一下该函数的实例。
 ```javascript
 // 发现敌人时触发
-// enemy_angle 敌人的角度
-const scannedRobot = function(enemy_angle){ 
-      this.say("我已经发现你了"); // 向敌方喊话
-      this.continual_scan(); // 恢复扫描
+const scannedRobot = ()=>{ 
+      console.log(enemyAngle()); // 打印敌人的角度
+      say("我已经发现你了"); // 向敌方喊话
+      continualScan(); // 恢复扫描
 }
 ```
 在以上的实例中，当我们的坦克雷达扫描到敌方单位时会**大喊一声“我已经发现你了”**，随后接着扫描。
-该函数可以接收一个参数`enemy_angle`，代表敌人相对于自身的角度。因此我们就可以配合系统提供的API`get_current_cannon_angle()`获取我们当前炮口的角度从而校准炮口位置，从而进行对敌方单位的攻击。
-你可能注意到了，在扫描的最后我们调用了`continual_scan()`，它的作用是在执行完`scannedRobot`后恢复雷达的扫描行为，**若是我们不调用该方法则我们的坦克在后续的行动中将无法旋转雷达**，因为雷达扫描到敌方单位的优先级是高于`run`的。
+该函数可以调用一个`enemyAngle()`返回敌人相对于自身的角度。因此我们就可以配合系统提供的API`getCurrentCannonAngle()`获取我们当前炮口的角度从而校准炮口位置，从而进行对敌方单位的攻击。
+你可能注意到了，在扫描的最后我们调用了`continualScan()`，它的作用是在执行完`scannedRobot`后恢复雷达的扫描行为，**若是我们不调用该方法则我们的坦克在后续的行动中将无法旋转雷达**，因为雷达扫描到敌方单位的优先级是高于`run`的。
 
 ### hitWall
 初始化坦克传入的第三个参数是`hitWall`函数，它的出现是为了让我们可以在坦克 *撞击墙壁后* 可以进行一系列我们预设的行为。
 ```javascript
 // 撞墙时触发
-const hitWall = function(){
-  this.say("怎么撞墙了");
-  this.back(30);
-  this.tank_turn(45);
+const hitWall = ()=>{
+  say("怎么撞墙了");
+  back(30);
+  tankTurn(45);
 }
 ```
 在上面的示例中，我们完成了一个最基本的`hitWall`回调，当我们的坦克撞墙时会**先说“怎么撞墙了？”，接着往回退30个单位，最后坦克车身向左转45°**。
@@ -101,8 +105,8 @@ const hitWall = function(){
 初始化坦克需要传入的第最后个参数是`hitByBullet`，它可以让我们在坦克 *被敌方单位击中后* 可以进行一系列我们预设的行为。
 ```javascript
 // 被击中时触发
-const hitByBullet = function(){
-  this.say("我申气呢");
+const hitByBullet = ()=>{
+  say("我申气呢");
 }
 ```
 ## 行为API
@@ -112,83 +116,81 @@ const hitByBullet = function(){
 + 前进
 ``` javascript
 // 前进100个单位
-this.ahead(100)
+ahead(100)
 
 // 后退100个单位
-this.ahead(-100)
+ahead(-100)
 ```
 + 后退
 ``` javascript
 // 后退100个单位
-this.back(100)
+back(100)
 
 // 前进100个单位
-this.back(-100)
+back(-100)
 ```
 
 ### 旋转
 + 坦克旋转
 ``` javascript
 // 向左旋转45°
-this.tank_turn(45)
+tankTurn(45)
 
 // 向右旋转45°
-this.tank_turn(-45)
+tankTurn(-45)
 ```
 + 炮口旋转
 ``` javascript
 // 向左旋转45°
-this.cannon_turn(45)
+cannonTurn(45)
 
 // 向右旋转45°
-this.cannon_turn(-45)
+cannonTurn(-45)
 ```
 + 雷达旋转
 ``` javascript
 // 向左旋转45°
-this.radar_turn(45)
+radarTurn(45)
 
 // 向右旋转45°
-this.radar_turn(-45)
+radarTurn(-45)
 ```
 
 ### 开炮
-每次开炮之后都需要耗费时间重新装填弹药，我的可以调用`get_cannnon_reload_time()`查看装填所需的总时间，`get_last_launch_time()` 可以查看上次发射炮弹的时间，通过判断当前时间`Date.now()`减去发射时间`get_last_launch_time()`是否大于等于所需的装填时间`get_cannnon_reload_time()`，来确定本次是否可以射出炮弹
+每次开炮之后都需要耗费时间重新装填弹药，我的可以调用`getCannnonReloadTime()`查看装填所需的总时间，`getLastLaunchTime()` 可以查看上次发射炮弹的时间，通过判断当前时间`Date.now()`减去发射时间`getLastLaunchTime()`是否大于等于所需的装填时间`getCannnonReloadTime()`，来确定本次是否可以射出炮弹
 ``` javascript
 // 判断是否可以发射
-if (Date.now() - this.get_last_launch_time() >= this.get_cannnon_reload_time()){
+if (Date.now() - getLastLaunchTime() >= getCannnonReloadTime()){
   // 朝当前炮管朝向发射炮弹
-  this.fire()
+  fire()
 }
 ```
 
 ### 喊话
 ``` javascript
-this.say("Hello TankCode")
+say("Hello TankCode")
 ```
 
 ### 继续扫描
 它的作用是在执行完`scannedRobot`后恢复雷达的扫描行为，**若是我们不调用该方法则我们的坦克在后续的行动中将无法旋转雷达**，因为雷达扫描到敌方单位的优先级是高于`run`的。
 ``` javascript
-this.continual_scan();
+continualScan();
 ```
 
 ### 行为重复
 你可能已经注意到了，坦克在 `run` 方法里的运动结束之后，就会停止。如果我们想运动多次地执行，最简单的方式只需要一个 for 循环。例如下面的代码将使坦克进行三次的来回运动
 ``` javascript
 for(let i = 0; i < 3; i++){
-  this.tank_turn(180)
-  this.ahead(300)
+  tankTurn(180)
+  ahead(300)
 }
 ```
-有时候可能多次的循环运动还不足够，如果我们想让运动无限地循环执行，这时使用`while(true)`的死循环是不可取的，因为其会阻塞主线程的运行。这时候我们可以调用`loop`方法，使坦克的行为无限循环。 以下代码使用 loop方法，使坦克做不断的原地旋转
+有时候可能多次的循环运动还不足够，如果我们想让运动无限地循环执行，这时使用`while(true)`的死循环是不可取的，因为其会阻塞主线程的运行。这时候我们可以在初始化坦克的配置中将`loopRun`更改为`true`，使坦克的行为无限重复run函数中的行为。
 ``` javascript
-// 动作循环
-this.loop = function () {
-  this.radar_turn(360);
+const options = {
+  ...
+  loopRun: true, // 是否循环执行run函数
 };
-// 还是需要执行的
-this.loop();
 ```
 ### 事件优先级
 ```javascript

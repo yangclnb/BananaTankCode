@@ -1,35 +1,30 @@
 export const simplyVal = `// tank的运动方法
-const run = function () {
-}
+const run = () => {
+  this.ahead(200);
+  this.back(10);
+};
 
 /* 发现敌人时触发
- enemy_angle 敌人的角度
+ enemyAngle() 获取敌人的角度
 */
-const scannedRobot = function(enemy_angle){
-}
+const scannedRobot = () => {};
 
 // 撞墙时触发
-const hitWall = function(){
-}
+const hitWall = () => {};
 
 // 被击中时触发
-const hitByBullet = function(){
-}
+const hitByBullet = () => {};
 
 // 初始化配置
 const options = {
-  color: "red", //坦克颜色 red | green | blue | yellow
+  color: "red", // 坦克颜色 red | green | blue | yellow
   initDirection: 230, // 坦克初始朝向，输入角度
-  initPosition: 1, //初始位置，按照象限划分
-}
+  initPosition: 1, // 初始位置，按照象限划分
+  loopRun: true, // 是否循环执行run函数
+};
 
-UserTank.create(
-    options,
-    run,
-    scannedRobot,
-    hitWall,
-    hitByBullet
-  )
+UserTank.create(options, run, scannedRobot, hitWall, hitByBullet);
+
 `;
 
 export const devVal = `// tank的运动方法
@@ -107,7 +102,7 @@ const scannedRobot = function(enemy_angle){
         this.cannon_turn(enemy_angle - cannon_angle)
         this.fire()
       }
-      this.continual_scan()
+      this.continualScan()
 }
 
 // 撞墙时触发

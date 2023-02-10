@@ -24,38 +24,31 @@ export class AITank {
     const [x, y] = getQuadrantCorner(position);
     const tank = new Tank(x, y, 180, 180, 180, color, 1);
 
-    tank.run.operation = function () {
-      this.loop = function () {
-        this.tank_turn(30);
-        this.ahead(200);
-        this.radar_turn(360);
-      };
-      this.loop();
+    tank.run = () => {
+      tankTurn(30);
+      ahead(200);
+      radarTurn(360);
     };
-    tank.on_scanned_robot.operation = function (enemy_angle) {
-      if (
-        this.get_cannnon_reload_time() <=
-        Date.now() - this.get_last_launch_time()
-      ) {
-        this.say("我发现你了~");
-        const cannon_angle = this.get_current_cannon_angle();
-        // this.cannon_turn(70);
-        this.cannon_turn(enemy_angle - cannon_angle);
-        this.fire();
+    tank.onScannedRobot = () => {
+      if (getCannnonReloadTime() <= Date.now() - getLastLaunchTime()) {
+        say("我发现你了~");
+        cannonTurn(enemyAngle() - getCurrentCannonAngle());
+        fire();
       }
-      this.continual_scan();
+      continualScan();
     };
-    tank.on_hit_wall.operation = function () {
-      this.back(10);
-      this.tank_turn(45);
+    tank.onHitWall = () => {
+      back(10);
+      tankTurn(45);
     };
-    tank.on_hit_by_bullet.operation = function () {
-      this.say("润润润");
-      this.ahead(50);
+    tank.onHitByBullet = () => {
+      say("润润润");
+      ahead(50);
     };
+    tank.loopAction = true;
 
     addTank(tank);
 
-    tank.run.operation();
+    tank.actionPackaging(tank.run, 1);
   }
 }

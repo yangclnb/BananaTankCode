@@ -8,7 +8,7 @@ import {
   ElDropdownMenu,
   ElDropdownItem,
 } from "element-plus";
-import { Setting, Platform, Timer } from "@element-plus/icons-vue";
+import { Setting, Platform, Refresh } from "@element-plus/icons-vue";
 import {
   init_canvas,
   startAnimate,
@@ -85,7 +85,7 @@ const { mode } = storeToRefs(gameMode);
             >控制台</el-button
           >
           <el-button
-            :icon="Timer"
+            :icon="Refresh"
             color="var(--theme-red-color)"
             @click="restart"
             >重新开始</el-button

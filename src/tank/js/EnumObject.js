@@ -35,7 +35,7 @@ export const tank_action = {
     front: "front",
     back: "back",
   },
-  adjust_tank_direction: 2,
+  adjustTankDirection: 2,
 };
 
 // 动作执行逻辑 同步（顺序执行，从上到下动作依次执行） | 异步（允许动作同时执行）

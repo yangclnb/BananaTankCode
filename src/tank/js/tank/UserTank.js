@@ -27,15 +27,21 @@ export class UserTank {
       options.color,
       1
     );
+    tank.run = onRun ? onRun : () => {};
+    tank.onScannedRobot = onScannedRobot ? onScannedRobot : () => {};
+    tank.onHitWall = onHitWall ? onHitWall : () => {};
+    tank.onHitByBullet = onHitByBullet ? onHitByBullet : () => {};
 
-    tank.run.operation = onRun ? onRun : function () {};
-    tank.on_scanned_robot.operation = onScannedRobot
-      ? onScannedRobot
-      : function () {};
-    tank.on_hit_wall.operation = onHitWall ? onHitWall : function () {};
-    tank.on_hit_by_bullet.operation = onHitByBullet
-      ? onHitByBullet
-      : function () {};
+    // tank.run.operation = onRun ? onRun : function () {};
+    // tank.on_scanned_robot.operation = onScannedRobot
+    //   ? onScannedRobot
+    //   : function () {};
+    // tank.on_hit_wall.operation = onHitWall ? onHitWall : function () {};
+    // tank.on_hit_by_bullet.operation = onHitByBullet
+    //   ? onHitByBullet
+    //   : function () {};
+    // 关闭循环执行
+    tank.loopAction = options.loopRun;
 
     addTank(tank);
 
@@ -47,7 +53,8 @@ export class UserTank {
       state: tankState.normal, // 存活，死亡，胜利
     };
 
-    tank.run.operation();
+    tank.actionPackaging(tank.run, 1);
+    // tank.run.operation();
   }
 
   static executeUserCode(code) {
