@@ -20,10 +20,8 @@
 const run = ()=> {
 };
 
-/* 发现敌人时触发
- enemy_angle 敌人的角度
-**/
-const scannedRobot = function(enemy_angle){
+// 发现敌人时触发
+const scannedRobot = ()=>{
 }
 
 // 撞墙时触发
@@ -36,9 +34,10 @@ const hitByBullet = ()=>{
 
 // 初始化配置
 const options = {
-  color: "red", //坦克颜色 red | green | blue | yellow
+  color: "red", // 坦克颜色 red | green | blue | yellow
   initDirection: 230, // 坦克初始朝向，输入角度
-  initPosition: 1, //初始位置，按照象限划分
+  initPosition: 1, // 初始位置，按照象限划分
+  loopRun: true, // 是否循环执行run函数
 };
 
 UserTank.create(

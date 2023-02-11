@@ -1,7 +1,7 @@
 export const simplyVal = `// tank的运动方法
 const run = () => {
-  this.ahead(200);
-  this.back(10);
+  ahead(200);
+  back(10);
 };
 
 /* 发现敌人时触发

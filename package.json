@@ -16,6 +16,7 @@
     "markdown-it": "^13.0.1",
     "monaco-editor-vue3": "^0.1.6",
     "pinia": "^2.0.28",
+    "terser": "^5.16.3",
     "vue": "^3.2.45",
     "vue-router": "^4.1.6"
   },

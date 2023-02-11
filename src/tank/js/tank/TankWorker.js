@@ -195,6 +195,27 @@ onmessage = (ev) => {
   wrapper.bind(self)(ev.data.func);
   // 返回用户行为列表
   postMessage(actionQueue);
+
+  // tarser内无法取消workder线程内的TreeShaking，只能手动调用避免
+  if (ev === undefined) {
+    say();
+    ahead();
+    back();
+    tankTurn();
+    cannonTurn();
+    radarTurn();
+    fire();
+    synchronousMode();
+    asynchronousMode();
+    stopScan();
+    continualScan();
+    enemyAngle();
+    getCurrentCannonAngle();
+    getCurrentRadarAngle();
+    getLastLaunchTime();
+    getCannnonReloadTime();
+  }
+
   // 关闭线程
   close();
 };
