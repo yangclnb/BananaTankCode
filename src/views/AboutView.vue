@@ -34,6 +34,7 @@ onMounted(() => (document.title = "TankCode | 关于项目"));
 </template>
 
 <style lang="less" scoped>
+@import "../assets/docs.css";
 #about {
   width: 100%;
   display: flex;

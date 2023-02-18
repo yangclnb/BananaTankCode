@@ -4,7 +4,6 @@ import { createApp } from "vue";
 import { createPinia } from "pinia";
 
 import "./assets/main.css";
-import "./assets/docs.css";
 import "element-plus/dist/index.css";
 import "element-plus/theme-chalk/dark/css-vars.css";
 import ElementPlus from "element-plus";
