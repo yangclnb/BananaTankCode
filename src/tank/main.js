@@ -102,19 +102,19 @@ function init_tank() {
  * @author: Banana
  */
 function animate() {
-  if (window.play_animate && tankList.length) {
-    canvas.init();
-    tankList.forEach((tankItem) => {
-      tankItem.implement_current_operation();
-      tankItem.draw();
-    });
-    // 播放爆炸动画
-    GIF.play();
-    // 判断用户是否胜利
-    checkResult();
-  }
-
-  requestAnimationFrame(animate);
+  setInterval(() => {
+    if (window.play_animate && tankList.length) {
+      canvas.init();
+      tankList.forEach((tankItem) => {
+        tankItem.implement_current_operation();
+        tankItem.draw();
+      });
+      // 播放爆炸动画
+      GIF.play();
+      // 判断用户是否胜利
+      checkResult();
+    }
+  }, 12);
 }
 
 export function startAnimate() {
