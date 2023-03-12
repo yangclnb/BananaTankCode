@@ -9,7 +9,7 @@ import {
 } from "../EnumObject.js";
 import { angle, classify_radian, radian } from "../utils/utils.js";
 import { tankList, canvas, initTankList } from "../../main.js";
-import TankWorker from "@/tank/js/tank/TankWorker.js?worker";
+import { threadPool } from "@/tank/js/tank/ThreadPool.js";
 
 export class Tank {
   action_queue = new Array(); // 行为队列
@@ -21,19 +21,11 @@ export class Tank {
    * @param {Number} tank_angle 坦克角度
    * @param {Number} cannon_angle 炮塔角度
    * @param {String} tank_color 坦克颜色 [red, blue, yellow, green]
-   * @param {Number} faction 队伍 [0，1，2，3]
+   * @param {Number} id 队伍 [0，1，2，3]
    * @author: Banana
    */
-  constructor(
-    x,
-    y,
-    tank_angle,
-    cannon_angle,
-    radar_angle,
-    tank_color,
-    faction
-  ) {
-    this.faction = faction;
+  constructor(x, y, tank_angle, cannon_angle, radar_angle, tank_color, id) {
+    this.id = id;
 
     console.log("Init " + tank_color);
     this.tank = {
@@ -541,14 +533,6 @@ export class Tank {
    * @author: Banana
    */
   actionPackaging(func, priority, enemyAngle) {
-    // console.log("运行webworker前的行为: ", this.action_queue);
-    const newWorker = new TankWorker();
-    // 获取返回的用户行为数组
-    newWorker.onmessage = (ev) => {
-      this.action_queue = ev.data;
-      // console.log("运行webworker后的行为:: ", this.action_queue);
-    };
-
     const object = {
       func,
       priority,
@@ -556,14 +540,6 @@ export class Tank {
         cannon: this.cannon,
         radar: this.radar,
         enemyAngle,
-        // cannon: {
-        //   angle: 20,
-        //   launch_time: 166666,
-        //   reload_time: 300000,
-        // },
-        // radar: {
-        //   angle: 120,
-        // },
       },
       actionQueue: this.action_queue,
     };
@@ -573,7 +549,14 @@ export class Tank {
       func: object.func.toString(),
     });
 
-    newWorker.postMessage(temp);
+    threadPool.execute({
+      id: this.id,
+      option: temp,
+      onmessage: (ev) => {
+        console.log("ev.data :>> ", ev.data);
+        this.action_queue = ev.data;
+      },
+    });
   }
 
   run = () => {};

@@ -215,7 +215,4 @@ onmessage = (ev) => {
     getLastLaunchTime();
     getCannnonReloadTime();
   }
-
-  // 关闭线程
-  close();
 };

@@ -22,7 +22,7 @@ export class AITank {
 
     // 初始化位置
     const [x, y] = getQuadrantCorner(position);
-    const tank = new Tank(x, y, 180, 180, 180, color, 1);
+    const tank = new Tank(x, y, 180, 180, 180, color, position);
 
     tank.run = () => {
       tankTurn(30);

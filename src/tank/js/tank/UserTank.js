@@ -25,7 +25,7 @@ export class UserTank {
       options.initDirection,
       options.initDirection,
       options.color,
-      1
+      options.initPosition
     );
     tank.run = onRun ? onRun : () => {};
     tank.onScannedRobot = onScannedRobot ? onScannedRobot : () => {};
