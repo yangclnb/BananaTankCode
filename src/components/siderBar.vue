@@ -11,7 +11,7 @@ import {
   <nav>
     <div id="top_part">
       <img src="@/assets/icon.png" width="25" alt="" />
-      <router-link to="/">
+      <router-link to="/home">
         <!-- 主页 -->
         <el-icon :size="25" color="currentColor"><HomeFilled /></el-icon>
       </router-link>

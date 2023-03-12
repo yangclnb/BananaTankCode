@@ -1,16 +1,15 @@
 import { Canvas } from "./js/canvas.js";
-import { addTank, checkResult, Tank } from "./js/tank/BasicTank.js";
+import { checkResult } from "./js/tank/BasicTank.js";
 // import resource_img from "./img/tank.png";
 import resource_img from "./img/tank_no_background.png";
 import { GIF } from "./js/utils/ControlGIF";
-import { UserTank } from "./js/tank/UserTank.js";
 import { AITank } from "./js/tank/AITank.js";
 
 window.play_animate = true;
 
 window.tank_img = new Image();
 window.tank_img.src = resource_img;
-window.onload = () => {
+window.tank_img.onload = () => {
   init();
 };
 
