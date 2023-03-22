@@ -1,7 +1,14 @@
+/* eslint-disable no-undef */
 import { tankState } from "../EnumObject.js";
-import { getQuadrantCorner } from "../utils/utils.js";
+import {
+  getQuadrantCorner,
+  getSparePosition,
+  getSpareColor,
+} from "../utils/utils.js";
+import { getCode } from "../../../api/api";
 import { Tank, addTank } from "./BasicTank.js";
-import { initTankList } from "../../main.js";
+import { initTankList, tankList } from "../../main.js";
+
 export class UserTank {
   /**
    * @function: creat
@@ -32,14 +39,6 @@ export class UserTank {
     tank.onHitWall = onHitWall ? onHitWall : () => {};
     tank.onHitByBullet = onHitByBullet ? onHitByBullet : () => {};
 
-    // tank.run.operation = onRun ? onRun : function () {};
-    // tank.on_scanned_robot.operation = onScannedRobot
-    //   ? onScannedRobot
-    //   : function () {};
-    // tank.on_hit_wall.operation = onHitWall ? onHitWall : function () {};
-    // tank.on_hit_by_bullet.operation = onHitByBullet
-    //   ? onHitByBullet
-    //   : function () {};
     // 关闭循环执行
     tank.loopAction = options.loopRun;
 
@@ -57,8 +56,93 @@ export class UserTank {
     // tank.run.operation();
   }
 
+  // 根据对手的代码创建坦克
+  static createEnemyUserTankByID(
+    options,
+    onRun,
+    onScannedRobot,
+    onHitWall,
+    onHitByBullet
+  ) {
+    const position = getSparePosition(tankList);
+    const color = getSpareColor(tankList);
+
+    // 初始化位置
+    const [x, y] = getQuadrantCorner(position);
+    if (x == undefined) return;
+
+    const tank = new Tank(
+      x,
+      y,
+      options.initDirection,
+      options.initDirection,
+      options.initDirection,
+      color,
+      position
+    );
+    tank.run = onRun ? onRun : () => {};
+    tank.onScannedRobot = onScannedRobot ? onScannedRobot : () => {};
+    tank.onHitWall = onHitWall ? onHitWall : () => {};
+    tank.onHitByBullet = onHitByBullet ? onHitByBullet : () => {};
+
+    tank.loopAction = options.loopRun;
+
+    addTank(tank);
+
+    tank.actionPackaging(tank.run, 1);
+    // tank.run.operation();
+  }
+
+  static createAITank() {
+    const position = getSparePosition(tankList);
+    // console.log("空闲的位置 :>> ", position);
+    const color = getSpareColor(tankList);
+    // console.log("空闲的颜色 :>> ", color);
+
+    // 初始化位置
+    const [x, y] = getQuadrantCorner(position);
+    if (x == undefined) return;
+
+    const tank = new Tank(x, y, 180, 180, 180, color, position);
+
+    tank.run = () => {
+      tankTurn(30);
+      ahead(200);
+      radarTurn(360);
+    };
+    tank.onScannedRobot = () => {
+      if (getCannnonReloadTime() <= Date.now() - getLastLaunchTime()) {
+        say("我发现你了~");
+        cannonTurn(enemyAngle() - getCurrentCannonAngle());
+        fire();
+      }
+      continualScan();
+    };
+    tank.onHitWall = () => {
+      back(10);
+      tankTurn(45);
+    };
+    tank.onHitByBullet = () => {
+      say("润润润");
+      ahead(50);
+    };
+    tank.loopAction = true;
+
+    addTank(tank);
+
+    tank.actionPackaging(tank.run, 1);
+  }
+
   static executeUserCode(code) {
     initTankList();
+    eval(code);
+    // this.createEnemyUserTank(13);
+  }
+
+  static async createEnemyUserTank(userID) {
+    let { code } = await getCode(userID);
+    code = code.replace(/UserTank.create/g, "UserTank.createEnemyUserTankByID");
+
     eval(code);
   }
 }

@@ -17,6 +17,31 @@ export const map_color_scheme = {
   c: ["#a73737", "#7a2828"],
 };
 
+export const backgroundList = [
+  {
+    type: "纹理背景",
+    typeID: "0",
+    options: [
+      { name: "金属质感", data: [0, 107, 160] },
+      { name: "砖块质感", data: [0, 159, 160] },
+      { name: "岩石质感", data: [0, 214, 160] },
+    ],
+  },
+  {
+    type: "纯色背景",
+    typeID: "1",
+    options: [
+      { name: "配色1", data: [1, "#83af9b", "#f9cdad"] },
+      { name: "配色2", data: [1, "#111927", "#1D2839"] },
+      { name: "配色3", data: [1, "#a73737", "#7a2828"] },
+    ],
+  },
+];
+
+// 初始化背景
+window.canvasBackground = [1, "#83af9b", "#f9cdad"];
+window.displayRadar = true;
+
 // tank 的状态
 export const tankState = {
   fail: "FAIL",

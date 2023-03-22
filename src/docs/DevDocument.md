@@ -2,9 +2,6 @@
 
 🪖一款基于 **ES6 + canvas** 的坦克对战平台，其区别于传统的坦克大战的主要因素在于并非通过玩家的键鼠控制坦克的各种行为，而是通过代码执行各种函数从而实现控制坦克在特定的事件触发时按照玩家的代码让坦克执行特定的操作。在这个过程中玩家可以更好的了解 **ES6** 中的语法以及新特性，从而达到学习的目的。
 
-
-
-
 ## 坐标系
 
 在正式开始驾驶我们的坦克之前，让我们先了解一下 *BananaCodeTank* 中的坐标系
@@ -49,8 +46,8 @@ UserTank.create(
   );
 ```
 ### options配置
-正如上面说讲的，options的内容是坦克的基本配置，其中包含**坦克的颜色**，**初始角度**以及**出生点的位置**。
-+ **color** : 但由于贴图的绘制有限，目前可供用户选择的颜色只有 red yellow green blue 四种选择
+正如上面说讲的，options的内容是坦克的基本配置，其中包含**坦克的颜色**，**初始角度**以及**出生点的象限**。
++ **color** : 但由于贴图的绘制有限，目前可供用户选择的颜色只有 `red | yellow | green | blue` 四种选择
 + **initDirection** : 初始的朝向，也就是生成坦克是坦克正面的朝向，*BananaCodeTank*的坐标系具体划分可以看下面关于**坐标系**的内容
 + **initPosition** : 坦克出生点的象限，按照数学意义上的象限划分。比如此处我输入的是`initPosition: 1`，那么我的出生点就是在地图右上角的位置也就是第一象限。
 ``` javascript
@@ -62,6 +59,51 @@ const options = {
   loopRun: false, // 是否循环执行run函数
 };
 ```
+
+### 模式选择
+在CodeTank中，用户通过不同的创建敌方单位的代码，可以实现不同的对战模式。这种方式只需要我们在`UserTank.create()`后添加用于创建敌方单位代码即可。
+不过有一点需要注意，该游戏的**坦克上限为四辆**。所以用户最多只能添加三辆敌方单位。
+#### 开发者模式
+所谓开发者模式，就是场上不存在其他的敌方单位作为干扰项，所以我们只需要正常单独的创建我们自己的坦克就可以起到开发者模式的效果。
+``` javascript
+...
+UserTank.create(options, run, scannedRobot, hitWall, hitByBullet);
+```
+#### 与机器人对战
+与机器人对战只需要将创建机器人坦克的代码`UserTank.createAITank();`复制到你的代码最底部即可。
+``` javascript
+...
+UserTank.create(options, run, scannedRobot, hitWall, hitByBullet);
+
+// 添加AI坦克
+UserTank.createAITank();
+```
+
+#### 与玩家对战
+想要挑战其他玩家也很容易，第一步就是在[排行榜](/rank)中找到你想要挑战的玩家单位,然后点击**前往挑战**后将对话框内的高亮代码复制到你的代码最底部即可。
+例如此处我复制的代码是`UserTank.createEnemyUserTank(14);`
+``` javascript
+...
+UserTank.create(options, run, scannedRobot, hitWall, hitByBullet);
+
+// 添加玩家坦克
+UserTank.createEnemyUserTank(14);
+```
+
+#### 同时与玩家与机器人对战
+结合我们上面提到的两种代码，我们就可以实现同时与机器人和玩家进行战斗。
+``` javascript
+...
+UserTank.create(options, run, scannedRobot, hitWall, hitByBullet);
+
+// 我添加了一辆玩家坦克
+UserTank.createEnemyUserTank(14);
+
+// 我添加了两辆AI坦克
+UserTank.createAITank();
+UserTank.createAITank();
+```
+
 
 ### run
 初始化坦克传入的第二个参数是`run`函数，其主要的作用是让我们的坦克在为触发任何事件时控制其进行活动，因在一系列事件的优先级中`run`的优先级是最低的。接下来我们看一个该函数的实例。
@@ -84,9 +126,11 @@ const scannedRobot = ()=>{
       continualScan(); // 恢复扫描
 }
 ```
-在以上的实例中，当我们的坦克雷达扫描到敌方单位时会**大喊一声“我已经发现你了”**，随后接着扫描。
+在以上的实例中，当我们的坦克雷达扫描到敌方单位时会 大喊一声“我已经发现你了”，随后接着扫描。
 该函数可以调用一个`enemyAngle()`返回敌人相对于自身的角度。因此我们就可以配合系统提供的API`getCurrentCannonAngle()`获取我们当前炮口的角度从而校准炮口位置，从而进行对敌方单位的攻击。
+
 你可能注意到了，在扫描的最后我们调用了`continualScan()`，它的作用是在执行完`scannedRobot`后恢复雷达的扫描行为，**若是我们不调用该方法则我们的坦克在后续的行动中将无法旋转雷达**，因为雷达扫描到敌方单位的优先级是高于`run`的。
+
 
 ### hitWall
 初始化坦克传入的第三个参数是`hitWall`函数，它的出现是为了让我们可以在坦克 *撞击墙壁后* 可以进行一系列我们预设的行为。
@@ -98,14 +142,14 @@ const hitWall = ()=>{
   tankTurn(45);
 }
 ```
-在上面的示例中，我们完成了一个最基本的`hitWall`回调，当我们的坦克撞墙时会**先说“怎么撞墙了？”，接着往回退30个单位，最后坦克车身向左转45°**。
+在上面的示例中，我们完成了一个最基本的`hitWall`回调，当我们的坦克撞墙时会**先说“怎么撞墙了？”，接着往倒退30个单位，最后坦克车身向左转45°**。
 
 ### hitByBullet
 初始化坦克需要传入的第最后个参数是`hitByBullet`，它可以让我们在坦克 *被敌方单位击中后* 可以进行一系列我们预设的行为。
 ```javascript
 // 被击中时触发
 const hitByBullet = ()=>{
-  say("我申气呢");
+  say("我申气呢~");
 }
 ```
 ## 行为API
@@ -175,6 +219,30 @@ say("Hello TankCode")
 ``` javascript
 continualScan();
 ```
+### 改变行为执行逻辑
+正常情况下，我们的坦克动作是同步执行的。比如下面的代码中，我们的坦克会先向前移动100个单位，在向前移动的行为执行完成后再旋转雷达360。
+``` javascript
+ahead(100);
+radarTurn(360);
+```
+这就固然容易理解，但是我们坦克的执行的效率而言就没有那么高了。试想一下如果我可以将代码调整为一边前进一边扫描敌人，相对与之前的代码明显更加容易发现敌方单位。对于这种需求，就需要使用`asynchronousMode()`方法将运行的逻辑调整为异步执行。
+``` javascript
+asynchronousMode();
+ahead(100);
+radarTurn(360);
+```
+既然有将行为逻辑更改为异步的方法，那自然会有将逻辑改为同步的方法。
+再我们某些代码行为中，我们可能希望将代码更改回同步执行的逻辑，这时候就可以使用`synchronousMode()`方法更改。例如下面的代码就是先异步执行`ahead radarTurn`两个动作，之后再顺序执行`ahead back`这两个动作。
+``` javascript
+asynchronousMode();
+ahead(100);
+radarTurn(360);
+
+synchronousMode();
+ahead(20);
+back(20);
+```
+
 
 ### 行为重复
 你可能已经注意到了，坦克在 `run` 方法里的运动结束之后，就会停止。如果我们想运动多次地执行，最简单的方式只需要一个 for 循环。例如下面的代码将使坦克进行三次的来回运动

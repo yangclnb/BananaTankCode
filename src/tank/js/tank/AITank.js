@@ -14,7 +14,6 @@ export class AITank {
    * @author: Banana
    */
   static create() {
-    //TODO 遍历坦克list 获取还未被占据的出生点象限和坦克颜色
     const position = getSparePosition(tankList);
     // console.log("空闲的位置 :>> ", position);
     const color = getSpareColor(tankList);

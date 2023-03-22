@@ -95,6 +95,8 @@ export function getQuadrantCorner(quadrant) {
         canvas.width - canvas.square_width - 10,
         canvas.height - canvas.square_height - 10,
       ];
+    default:
+      return [null, null];
   }
 }
 
@@ -159,4 +161,24 @@ export function getSpareColor(tankList) {
  */
 export function formatString(str1, str2, num1, num2) {
   return str1.padEnd(num1, " ") + str2.padStart(num2, " ");
+}
+
+export function formatTime(date, text) {
+  const accurateTime = new Date(date);
+  const second = accurateTime / 1000;
+  const min = second / 60;
+  const hour = min / 60;
+  const day = hour / 24;
+
+  // X分钟前 < 60分钟 ， X小时前 < 24小时 ， X天前  < 7天，20xx-x-x >= 7天
+
+  if (second < 60) return `${Math.floor(second)}秒${text}`;
+  else if (min < 60) return `${Math.floor(min)}分钟${text}`;
+  else if (hour < 24) return `${Math.floor(hour)}小时${text}`;
+  else if (day < 7) return `${Math.floor(day)}天${text}`;
+  else {
+    return `${accurateTime.getFullYear()}-${
+      accurateTime.getMonth() + 1
+    }-${accurateTime.getDate()}`;
+  }
 }

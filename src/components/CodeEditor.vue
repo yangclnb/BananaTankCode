@@ -3,13 +3,11 @@ import MonacoEditor from "monaco-editor-vue3";
 import { vDrag } from "@/tank/js/utils/drag.js";
 import { onMounted, reactive, ref } from "vue";
 import { ElMessage, ElButton } from "element-plus";
-import { Finished } from "@element-plus/icons-vue";
+import { Select, RefreshRight } from "@element-plus/icons-vue";
 import { useConsoleDisplayStore } from "@/stores/consoleStatus";
 import { storeToRefs } from "pinia";
-import { useTankStatusStore } from "../stores/tankStatus";
+// import { useTankStatusStore } from "../stores/tankStatus";
 import { UserTank } from "@/tank/js/tank/UserTank.js";
-import { Tank, addTank } from "@/tank/js/tank/BasicTank.js";
-import { AITank } from "@/tank/js/tank/AITank.js";
 import { simplyVal } from "@/template/UserCode.js";
 const store = useConsoleDisplayStore();
 const { state } = storeToRefs(store);
@@ -33,29 +31,26 @@ function closeConsole() {
 }
 
 // 获取游戏模式
-const gameMode = useTankStatusStore();
-const { mode } = storeToRefs(gameMode);
+// const gameMode = useTankStatusStore();
+// const { mode } = storeToRefs(gameMode);
 
 // 提交代码
 const updateTank = () => {
   const value = defaultValue.value;
 
-  if (mode.value === "console") {
-    UserTank.executeUserCode(value);
-  } else if (mode.value === "pve") {
-    UserTank.executeUserCode(value);
-    AITank.create();
-    AITank.create();
-    AITank.create();
-  }
+  UserTank.executeUserCode(value);
 
   // 存储代码到本地
   localStorage.setItem("userCode", value);
 
   ElMessage({
-    message: `您提交的代码已更新 - 当前模式 ${mode.value.toUpperCase()}`,
+    message: `您的代码已更新`,
     type: "success",
   });
+};
+
+const updateCode = () => {
+  defaultValue.value = simplyVal;
 };
 
 // 添加拖动
@@ -72,8 +67,10 @@ onMounted(() => {
         <div></div>
         <div></div>
       </div>
-
-      <el-button icon="Finished" @click="updateTank">提交代码</el-button>
+      <div id="rightBtn">
+        <el-button :icon="RefreshRight" @click="updateCode">重置</el-button>
+        <el-button :icon="Select" @click="updateTank">提交代码</el-button>
+      </div>
     </div>
     <MonacoEditor
       theme="vs-dark"
@@ -119,6 +116,10 @@ onMounted(() => {
       div:nth-child(3) {
         background-color: var(--theme-green-color);
       }
+    }
+
+    #rightBtn {
+      justify-content: end;
     }
   }
 }

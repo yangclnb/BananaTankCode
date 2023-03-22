@@ -1,30 +1,40 @@
 <script setup>
 import Editor from "../components/CodeEditor.vue";
 import HeadPart from "../components/HeadPart.vue";
-
+import ReportBox from "../components/ReportBox.vue";
+import { ElButton, ElSelect, ElOption, ElSwitch } from "element-plus";
 import {
-  ElDropdown,
-  ElButton,
-  ElDropdownMenu,
-  ElDropdownItem,
-} from "element-plus";
-import { Setting, Platform, Refresh } from "@element-plus/icons-vue";
+  Setting,
+  Platform,
+  Refresh,
+  Check,
+  Close,
+} from "@element-plus/icons-vue";
 import {
   init_canvas,
   startAnimate,
   stopAnimate,
   restart,
 } from "@/tank/main.js";
-import { onMounted, onUnmounted, ref } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import { useConsoleDisplayStore } from "@/stores/consoleStatus";
-import { useTankStatusStore } from "../stores/tankStatus";
+// import { useTankStatusStore } from "../stores/tankStatus";
 import { storeToRefs } from "pinia";
+import { backgroundList } from "../tank/js/EnumObject";
 
 let currentAnimateState = ref("暂停");
+const dialogFormVisible = ref(false);
+const showRadarLine = ref(window.displayRadar);
+const currentBackground = ref(window.canvasBackground);
+
 const startAndStop = () => {
   window.play_animate ? stopAnimate() : startAnimate();
   currentAnimateState.value = window.play_animate ? "暂停" : "开始";
 };
+
+watch(showRadarLine, (newVal) => {
+  window.displayRadar = newVal;
+});
 
 onMounted(() => {
   document.title = "TankCode | 主页";
@@ -42,41 +52,32 @@ function showConsole() {
   consoleDisplay.show();
 }
 
+// 控制设置框出现
+function dialogFormDispaly() {
+  dialogFormVisible.value = true;
+}
+
+// 改变背景时触发
+function changeBackground(selectBackground) {
+  window.canvasBackground = selectBackground;
+}
+
 // 控制游戏模式
-const gameMode = useTankStatusStore();
-const { mode } = storeToRefs(gameMode);
+// const gameMode = useTankStatusStore();
+// const { mode } = storeToRefs(gameMode);
 </script>
 
 <template>
   <div id="home_page">
+    <ReportBox />
     <HeadPart />
     <div id="game_box">
       <div id="tools_bar">
         <div id="left_tools">
-          <el-dropdown trigger="click">
-            <el-button color="var(--theme-second-background)">
-              {{ mode.toUpperCase() + " 模式"
-              }}<el-icon class="el-icon--right"><arrow-down /></el-icon>
-            </el-button>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item @click="gameMode.PVPBattleMode"
-                  >PVP模式</el-dropdown-item
-                >
-                <el-dropdown-item @click="gameMode.PVEBattleMode"
-                  >PVE模式</el-dropdown-item
-                >
-                <el-dropdown-item @click="gameMode.consoleBattleMode"
-                  >开发者模式</el-dropdown-item
-                >
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
           <el-button color="var(--theme-green-color)" @click="startAndStop">{{
             currentAnimateState
           }}</el-button>
         </div>
-
         <div id="right_tools">
           <el-button
             @click="showConsole"
@@ -90,7 +91,9 @@ const { mode } = storeToRefs(gameMode);
             @click="restart"
             >重新开始</el-button
           >
-          <el-button :icon="Setting" type="primary">设置</el-button>
+          <el-button :icon="Setting" type="primary" @click="dialogFormDispaly"
+            >设置</el-button
+          >
         </div>
       </div>
       <div id="canvas_box">
@@ -100,6 +103,47 @@ const { mode } = storeToRefs(gameMode);
       </div>
     </div>
     <Editor />
+    <el-dialog v-model="dialogFormVisible" title="界面设置">
+      <table>
+        <tr>
+          <td>显示雷达线条：</td>
+          <td>
+            <el-switch
+              v-model="showRadarLine"
+              class="mt-2"
+              style="margin-left: 24px"
+              inline-prompt
+              :active-icon="Check"
+              :inactive-icon="Close"
+            />
+          </td>
+        </tr>
+        <tr>
+          <td>切换地图：</td>
+          <td>
+            <el-select
+              v-model="currentBackground"
+              class="m-2"
+              placeholder="Select"
+              @change="changeBackground"
+            >
+              <el-option-group
+                v-for="group in backgroundList"
+                :key="group.typeID"
+                :label="group.type"
+              >
+                <el-option
+                  v-for="item in group.options"
+                  :key="item.name"
+                  :label="item.name"
+                  :value="item.data"
+                />
+              </el-option-group>
+            </el-select>
+          </td>
+        </tr>
+      </table>
+    </el-dialog>
   </div>
 </template>
 

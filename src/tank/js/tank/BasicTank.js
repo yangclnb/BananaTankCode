@@ -66,7 +66,6 @@ export class Tank {
       turn_direction: tank_turn.left, // 下次雷达的转向
       largest_distance: canvas.square_width * 8.5, // 最远扫描距离 九个单位
       enemyPosition: null,
-      darw_radar: true,
     };
 
     this.loopAction = false;
@@ -97,8 +96,7 @@ export class Tank {
       this.radar.angle,
       this.radar.largest_distance,
       this.tank.x,
-      this.tank.y,
-      this.radar.darw_radar
+      this.tank.y
     );
 
     canvas.render.cannon(this.cannon.angle, this.tank.x, this.tank.y);
@@ -930,15 +928,14 @@ export class Tank {
     // 若被摧毁的是用户的坦克，直接结束游戏
     if (window.userTank && this.tank.color === window.userTank.color) {
       window.userTank.state = tankState.fail;
-      window.userTank.serviveTime = Date.now() - window.userTank.serviveTime;
     } else if (
       window.userTank &&
       tankList.length === 1 &&
       tankList[0].tank.color === window.userTank.color
     ) {
       window.userTank.state = tankState.victory;
-      window.userTank.serviveTime = Date.now() - window.userTank.serviveTime;
     }
+    window.userTank.serviveTime = Date.now() - window.userTank.serviveTime;
   }
 
   /**
@@ -1074,6 +1071,8 @@ export class Tank {
 
 // 添加坦克
 export function addTank(newTank) {
+  // 判断当前坦克队列情况，超过四辆坦克直接退出
+  if (tankList.length > 3) return;
   tankList.push(newTank);
 }
 
@@ -1098,18 +1097,23 @@ export function delTank(color) {
 
 // 判断是否胜利
 export function checkResult() {
-  if (!window.userTank) return;
-
-  // console.log("tankList :>> ", tankList);
+  const userTankState = window.userTank;
+  if (!userTankState) return;
 
   // 判断用户的坦克是否为 胜利或失败 的状态
   if (
-    window.userTank.state === tankState.fail ||
-    window.userTank.state === tankState.victory
+    userTankState.state === tankState.fail ||
+    userTankState.state === tankState.victory
   ) {
     initTankList();
-    canvas.settlementPage(window.userTank);
-    console.log("object :>> ", window.userTank);
+    canvas.settlementPage(userTankState);
+
+    // TODO 触发游戏结束事件
+    const gameover = new CustomEvent("gameover", {
+      detail: { userTankState: Object.assign(userTankState) },
+    });
+    dispatchEvent(gameover);
+
     window.userTank = undefined;
   }
 }

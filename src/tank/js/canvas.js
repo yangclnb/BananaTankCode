@@ -1,4 +1,4 @@
-import { map_faction_position, map_color_scheme } from "./EnumObject.js";
+import { map_faction_position } from "./EnumObject.js";
 import { Tank } from "./tank/BasicTank.js";
 import { formatString, angle } from "./utils/utils.js";
 
@@ -18,11 +18,21 @@ export class Canvas {
   }
 
   init() {
-    this.create_vertical_background(
-      map_color_scheme.b[0],
-      map_color_scheme.b[1]
-    );
+    this.drawBackground();
+    // this.create_vertical_background(map_color_scheme.b);
     // this.fill_texture_background("rock_map");
+  }
+
+  drawBackground() {
+    const [backgroundType, value1, value2] = window.canvasBackground;
+    const bgInfo = [value1, value2];
+    if (backgroundType === 0) {
+      // 为 0 绘制贴图
+      this.fill_texture_background(bgInfo);
+    } else if (backgroundType === 1) {
+      // 为 1 绘制纯色背景
+      this.create_vertical_background(bgInfo);
+    }
   }
 
   /**
@@ -33,7 +43,9 @@ export class Canvas {
    * @return {*}
    * @author: Banana
    */
-  create_horizontal_background(color_1, color_2) {
+  create_horizontal_background(colorOptions) {
+    const [color_1, color_2] = colorOptions;
+
     for (let x = 0; x < this.minimum_x; x++) {
       for (let y = 0; y < this.minimum_xy; y++) {
         this.ctx.fillStyle = x % 2 == 0 ? color_1 : color_2;
@@ -55,7 +67,8 @@ export class Canvas {
    * @return {*}
    * @author: Banana
    */
-  create_vertical_background(color_1, color_2) {
+  create_vertical_background(colorOptions) {
+    const [color_1, color_2] = colorOptions;
     for (let x = 0; x < this.minimum_x; x++) {
       for (let y = 0; y < this.minimum_y; y++) {
         this.ctx.fillStyle = y % 2 == 0 ? color_1 : color_2;
@@ -77,13 +90,15 @@ export class Canvas {
    * @author: Banana
    */
   fill_texture_background(material) {
+    const [xPosistion, yPosition] = material;
+
     this.ctx.clearRect(0, 0, this.width, this.height);
     for (let x = 0; x < this.minimum_x; x++) {
       for (let y = 0; y < this.minimum_y; y++) {
         this.ctx.drawImage(
           window.tank_img,
-          map_faction_position[material].x,
-          map_faction_position[material].y,
+          xPosistion,
+          yPosition,
           49,
           46,
           x * this.square_width,
@@ -260,8 +275,8 @@ export class Canvas {
       this.popTransformation();
     },
     // 绘制雷达
-    radar: (currentAngle, distance, x, y, show = true) => {
-      if (!show) return;
+    radar: (currentAngle, distance, x, y) => {
+      if (!window.displayRadar) return;
       this.translate(x, y);
       this.rotate(-angle(90));
       this.rotate(angle(90) - currentAngle - angle(7.5));
