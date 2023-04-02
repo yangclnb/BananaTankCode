@@ -14,7 +14,12 @@ onMounted(async () => {
   const result = await getAllGrade();
 
   result.map((item) => {
-    item.pubtime = formatTime(Date.now() - new Date(item.pubtime), "前");
+    if (Date.now() - new Date(item.pubtime))
+      item.pubtime = formatTime(
+        Date.now() - new Date(item.pubtime),
+        "前",
+        new Date(item.pubtime)
+      );
     item.survivalTime = formatTime(new Date(parseInt(item.survivalTime)), "");
   });
   console.log("result: ", result);

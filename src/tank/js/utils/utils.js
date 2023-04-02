@@ -163,7 +163,7 @@ export function formatString(str1, str2, num1, num2) {
   return str1.padEnd(num1, " ") + str2.padStart(num2, " ");
 }
 
-export function formatTime(date, text) {
+export function formatTime(date, text, currentDate) {
   const accurateTime = new Date(date);
   const second = accurateTime / 1000;
   const min = second / 60;
@@ -177,8 +177,7 @@ export function formatTime(date, text) {
   else if (hour < 24) return `${Math.floor(hour)}小时${text}`;
   else if (day < 7) return `${Math.floor(day)}天${text}`;
   else {
-    return `${accurateTime.getFullYear()}-${
-      accurateTime.getMonth() + 1
-    }-${accurateTime.getDate()}`;
+    const time = new Date(currentDate);
+    return `${time.getFullYear()}-${time.getMonth() + 1}-${time.getDate()}`;
   }
 }
